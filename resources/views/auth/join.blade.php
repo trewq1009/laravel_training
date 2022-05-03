@@ -5,6 +5,9 @@
 
     <form action='/register' method="post" id="methodForm">
         @csrf
+        @if ($errors->has('field'))
+            <span class="text-danger">{{ $errors->first('field') }}</span>
+        @endif
         <div class="mb-3">
             <label for="userId" class="form-label">ID</label>
             <input type="text" class="form-control" value="{{ old('userId') }}" name="userId" id="userId" required>

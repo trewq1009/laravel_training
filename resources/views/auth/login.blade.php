@@ -15,8 +15,8 @@
         <div class="mb-3">
             <label for="userPassword" class="form-label">Password</label>
             <input type="password" class="form-control" name="userPw" id="userPassword" required>
-            @if ($errors->has('userId'))
-                <span class="text-danger">{{ $errors->first('userId') }}</span>
+            @if ($errors->has('userPw'))
+                <span class="text-danger">{{ $errors->first('userPw') }}</span>
             @endif
         </div>
         <button type="submit" class="btn btn-primary">Submit</button>

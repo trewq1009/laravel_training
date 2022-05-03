@@ -6,12 +6,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Exceptions\DatabaseException;
 use Exception;
-use phpDocumentor\Reflection\TypeResolver;
 
-class MemberController extends Controller
+class AuthController extends Controller
 {
     public function create(Request $request) {
         try {
@@ -44,7 +44,7 @@ class MemberController extends Controller
 
             $userNo = DB::table('tr_account')->insertGetId([
                 'id' => $validated['userId'],
-                'password' => Crypt::encryptString($validated['userPw']),
+                'password' => Hash::make($validated['userPw']),
                 'name' => Crypt::encryptString($validated['userName']),
                 'email' => Crypt::encryptString($validated['userEmail'])
             ]);
@@ -63,7 +63,7 @@ class MemberController extends Controller
             }
 
             $userMileage = DB::table('tr_mileage')->insertGetId([
-               'user_no' => $userNo
+                'user_no' => $userNo
             ]);
             if(!$userMileage) {
                 $validator->errors()->add('field', '회원 마일리지 생성에 실패했습니다.');
@@ -75,7 +75,7 @@ class MemberController extends Controller
 
 
             DB::commit();
-            return view('member.success');
+            return view('auth.joinSuccess');
 
         } catch (DatabaseException $e) {
             DB::rollBack();
@@ -105,7 +105,7 @@ class MemberController extends Controller
                 return redirect()->intended();
             }
             return redirect()->back()->withErrors([
-                'userId' => '아이디를 다시 확인해 주세요.'
+                'userId' => '이메일 인증 및 계정을 다시 확인해 주세요.'
             ])->withInput();
 
         } catch (Exception $e) {
@@ -126,6 +126,66 @@ class MemberController extends Controller
 
         } catch (Exception $e) {
             return redirect()->back();
+        }
+    }
+
+    public function profile()
+    {
+        try {
+            if(!Auth::check()) {
+                throw new Exception();
+            }
+
+            $userData = Auth::user();
+
+            $data = [
+                'id' => $userData->id,
+                'name' => Crypt::decryptString($userData->name),
+                'email' => Crypt::decryptString($userData->email),
+                'using_mileage' => 0,
+                'use_mileage' => 0,
+                'withdrawal_mileage' => 0
+            ];
+
+            return view('auth.profile', $data);
+
+        } catch (Exception $e) {
+            return redirect()->back();
+        }
+    }
+
+    public function update(Request $request)
+    {
+        try {
+            $validator =  Validator::make($request->all(),[
+                'userName' => ['required','alpha', 'min:2','max:10'],
+                'userPw' => ['required','min:8','max:20'],
+                'userPwC' => ['required','same:userPw','min:8','max:20'],
+            ]);
+
+            if($validator->fails()) {
+                throw new Exception();
+            }
+            $validated = $validator->validated();
+
+            DB::beginTransaction();
+
+            $updateRow = DB::table('tr_account')->where('no', Auth::user()->no)
+                ->update(['name' => Crypt::encryptString($validated['userName']), 'password' => Hash::make($validated['userPw'])]);
+
+            if(!$updateRow) {
+                $validator->errors()->add('field', '회원 정보 수정에 실패했습니다.');
+                throw new DatabaseException();
+            }
+
+            DB::commit();
+            return redirect('/');
+
+        } catch (DatabaseException $e) {
+            DB::rollBack();
+            return redirect()->back()->withErrors($validator)->withInput();
+        } catch (Exception $e) {
+            return redirect()->back()->withErrors($validator)->withInput();
         }
     }
 }

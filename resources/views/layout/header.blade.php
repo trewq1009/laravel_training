@@ -17,10 +17,10 @@
                 @auth
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                         <li class="nav-item">
-                            <a class="nav-link" href="/view/user/profile.php">프로필</a>
+                            <a class="nav-link" href="/profile">프로필</a>
                         </li>
                         <li class="nav-item" style="display: flex">
-                            <a class="nav-link" href="/view/mileage/mileage.php">마일리지 충전</a>
+                            <a class="nav-link" href="/mileagePayment">마일리지 충전</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="/logout">로그아웃</a>
