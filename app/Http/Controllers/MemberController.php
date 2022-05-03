@@ -105,8 +105,7 @@ class MemberController extends Controller
                 return redirect()->intended();
             }
             return redirect()->back()->withErrors([
-                'userId' => '아이디를 다시 확인해 주세요.',
-                'userPw' => '정보를 다시 확인 해 주세요.'
+                'userId' => '아이디를 다시 확인해 주세요.'
             ])->withInput();
 
         } catch (Exception $e) {
@@ -117,10 +116,13 @@ class MemberController extends Controller
     public function logout(Request $request)
     {
         try {
+            Auth::logout();
 
+            $request->session()->invalidate();
 
+            $request->session()->regenerateToken();
 
-
+            return redirect('/');
 
         } catch (Exception $e) {
             return redirect()->back();
