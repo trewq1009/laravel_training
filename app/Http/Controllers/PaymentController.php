@@ -4,7 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
 use Exception;
+use App\Exceptions\DatabaseException;
 
 class PaymentController extends Controller
 {
@@ -37,10 +41,26 @@ class PaymentController extends Controller
              *  지금은 시간상 충전 들어오면 바로 충전
              */
 
+//            DB::beginTransaction();
+//
+//            $mileageData = DB::table('tr_mileage')->where('user_no', Auth::user()->no)->lockForUpdate()->first();
+//            if(!$mileageData) {
+//                throw new DatabaseException();
+//            }
 
 
+//            $infomation = [
+//                'card_validity' => Crypt::encryptString($request)
+//            ];
 
+            var_dump($request);
+            echo $request;
+//            DB::commit();
+            return $request;
 
+        } catch (DatabaseException $e) {
+            DB::rollBack();
+            return redirect('/');
         } catch (Exception $e) {
             return redirect()->back();
         }
