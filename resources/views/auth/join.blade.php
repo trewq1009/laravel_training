@@ -3,7 +3,7 @@
 
 <section class="container">
 
-    <form action='/register' method="post" id="methodForm">
+    <form action='<?php echo htmlspecialchars("/register") ?>' method="post" id="methodForm">
         @csrf
         @if ($errors->has('field'))
             <span class="text-danger">{{ $errors->first('field') }}</span>

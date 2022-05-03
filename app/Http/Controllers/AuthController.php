@@ -71,8 +71,7 @@ class AuthController extends Controller
             }
 
             // 이메일 인증 추가 작업 구역
-
-
+//            MailController::sendSignUpEmail($validated['userName'], $validated['userEmail']);
 
             DB::commit();
             return view('auth.joinSuccess');
@@ -99,14 +98,28 @@ class AuthController extends Controller
             $validated = $validator->validated();
             $userData['id'] = $validated['userId'];
             $userData['password'] = $validated['userPw'];
-            if (Auth::attempt($userData)) {
-                $request->session()->regenerate();
 
-                return redirect()->intended();
+
+
+            // 이메일 인증
+            $userModelData = DB::table('tr_account')->where('id', $userData['id'])->first();
+            if($userModelData->id !== $userData['id']) {
+                $validator->errors()->add('userId', '아이디를 다시 확인해 주세요.');
+                throw new Exception();
             }
-            return redirect()->back()->withErrors([
-                'userId' => '이메일 인증 및 계정을 다시 확인해 주세요.'
-            ])->withInput();
+            if($userModelData->email_status == 'f') {
+                $validator->errors()->add('userId', '이메일 인증을 완료해 주세요.');
+                throw new Exception();
+            }
+
+            // 검증 후 로그인 검증 완료면 true
+            if(!Auth::attempt($userData)) {
+                $validator->errors()->add('userId', '계정을 다시 확인해 주세요.');
+                throw new Exception();
+            }
+
+            $request->session()->regenerate();
+            return redirect()->intended();
 
         } catch (Exception $e) {
             return redirect()->back()->withErrors($validator)->withInput();
@@ -183,9 +196,9 @@ class AuthController extends Controller
 
         } catch (DatabaseException $e) {
             DB::rollBack();
-            return redirect()->back()->withErrors($validator)->withInput();
+            return redirect()->back()->withErrors($validator);
         } catch (Exception $e) {
-            return redirect()->back()->withErrors($validator)->withInput();
+            return redirect()->back()->withErrors($validator);
         }
     }
 }

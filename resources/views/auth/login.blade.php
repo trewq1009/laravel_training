@@ -3,7 +3,7 @@
 
 <section class="container">
 
-    <form action='/login' method="post" id="methodForm">
+    <form action='<?php echo htmlspecialchars("/login") ?>' method="post" id="methodForm">
         @csrf
         <div class="mb-3">
             <label for="userId" class="form-label">ID</label>

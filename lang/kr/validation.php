@@ -40,7 +40,7 @@ return [
     'declined_if' => 'The :attribute must be declined when :other is :value.',
     'different' => 'The :attribute and :other must be different.',
     'digits' => 'The :attribute must be :digits digits.',
-    'digits_between' => 'The :attribute must be between :min and :max digits.',
+    'digits_between' => ':attribute 은 최소 :min 자리 최대 :max 자리 입니다.',
     'dimensions' => 'The :attribute has invalid image dimensions.',
     'distinct' => 'The :attribute field has a duplicate value.',
     'email' => '이메일 형식에 맞게 입력해 주세요.',
