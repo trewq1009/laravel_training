@@ -9,13 +9,14 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Auth;
 use App\Exceptions\DatabaseException;
 use Exception;
+use phpDocumentor\Reflection\TypeResolver;
 
 class MemberController extends Controller
 {
     public function create(Request $request) {
         try {
             $validator =  Validator::make($request->all(),[
-                'userId' => ['required','alpha_num','max:20'],
+                'userId' => ['required','alpha_num', 'min:5','max:20'],
                 'userName' => ['required','alpha'],
                 'userPw' => ['required','min:8','max:20'],
                 'userPwC' => ['required','same:userPw','min:8','max:20'],
@@ -29,13 +30,13 @@ class MemberController extends Controller
 
             $dbIdData = DB::table('tr_account')->where('id', $validated['userId'])->where('status', 't')->first();
             if($dbIdData) {
-                $validator->errors()->add('field', '중복된 아이디 입니다.');
+                $validator->errors()->add('userId', '중복된 아이디 입니다.');
                 throw new Exception();
             }
 
             $dbEmailData = DB::table('tr_account')->where('email', $validated['userEmail'])->where('status', 't')->first();
             if($dbEmailData) {
-                $validator->errors()->add('field', '중복된 이메일 입니다.');
+                $validator->errors()->add('userEmail', '중복된 이메일 입니다.');
                 throw new Exception();
             }
 
@@ -78,9 +79,9 @@ class MemberController extends Controller
 
         } catch (DatabaseException $e) {
             DB::rollBack();
-            return redirect('/register')->withErrors($validator)->withInput();
+            return redirect()->back()->withErrors($validator)->withInput();
         } catch (Exception $e) {
-            return redirect('/register')->withErrors($validator)->withInput();
+            return redirect()->back()->withErrors($validator)->withInput();
         }
     }
 
@@ -88,7 +89,7 @@ class MemberController extends Controller
     {
         try {
             $validator =  Validator::make($request->all(),[
-                'userId' => ['required','alpha_num','max:20'],
+                'userId' => ['required','alpha_num', 'min:5','max:20'],
                 'userPw' => ['required','min:8','max:20'],
             ]);
 
@@ -96,22 +97,33 @@ class MemberController extends Controller
                 throw new Exception();
             }
             $validated = $validator->validated();
-
-            if (Auth::attempt($validated)) {
+            $userData['id'] = $validated['userId'];
+            $userData['password'] = $validated['userPw'];
+            if (Auth::attempt($userData)) {
                 $request->session()->regenerate();
 
                 return redirect()->intended();
             }
-
-            return back()->withErrors([
+            return redirect()->back()->withErrors([
                 'userId' => '아이디를 다시 확인해 주세요.',
                 'userPw' => '정보를 다시 확인 해 주세요.'
             ])->withInput();
 
+        } catch (Exception $e) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+    }
+
+    public function logout(Request $request)
+    {
+        try {
+
+
+
 
 
         } catch (Exception $e) {
-            return redirect('/login')->withErrors($validator)->withInput();
+            return redirect()->back();
         }
     }
 }

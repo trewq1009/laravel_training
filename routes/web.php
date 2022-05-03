@@ -27,9 +27,11 @@ Route::post('/register', [\App\Http\Controllers\MemberController::class, 'create
 // 로그인
 Route::get('/login', function() {
    return view('member.login');
-})->middleware('guest');
+})->middleware('guest')->name('login');
 Route::post('/login', [\App\Http\Controllers\MemberController::class, 'login'])->middleware('guest');
 
+// 로그아웃
+Route::get('/logout', [\App\Http\Controllers\MemberController::class, 'logout'])->middleware('auth');
 
 
 

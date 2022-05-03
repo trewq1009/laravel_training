@@ -23,7 +23,7 @@
                             <a class="nav-link" href="/view/mileage/mileage.php">마일리지 충전</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/view/user/logout.php">로그아웃</a>
+                            <a class="nav-link" href="/logout">로그아웃</a>
                         </li>
                     </ul>
                 @endauth
