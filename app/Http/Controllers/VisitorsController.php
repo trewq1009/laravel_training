@@ -15,7 +15,7 @@ class VisitorsController extends Controller
     public function list()
     {
         try {
-            return view('visitors.list', ['data' => DB::table('tr_visitors_board')->where('status', 't')->paginate(10)]);
+            return view('visitors.list', ['data' => DB::table('tr_visitors_board')->where('status', 't')->orderByDesc('no')->paginate(10)]);
         } catch (Exception $e) {
             return redirect()->back();
         }
@@ -36,7 +36,7 @@ class VisitorsController extends Controller
             $validated = $validator->validated();
 
             if(Auth::check()) {
-                $params = ['user_type'=>'m', 'user_no'=>Auth::user()->no, 'user_name'=>Auth::user()->name, 'content'=>$validated['content']];
+                $params = ['user_type'=>'m', 'user_no'=>Auth::user()->no, 'user_name'=>'유저', 'content'=>$validated['content']];
             } else {
                 $params = ['user_type'=>'g', 'visitors_password'=>Hash::make($validated['visitorsPassword']), 'content'=>$validated['content']];
             }

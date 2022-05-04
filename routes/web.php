@@ -53,6 +53,9 @@ Route::get('/mileageReport', [\App\Http\Controllers\MileageController::class, 'r
 Route::get('/visitors', [\App\Http\Controllers\VisitorsController::class, 'list'])->name('visitors');
 Route::post('/visitors', [\App\Http\Controllers\VisitorsController::class, 'insert']);
 
+// ajax 방명록
+Route::get('/ajax/visitors/list', [\App\Http\Controllers\AjaxController::class, 'visitorsList']);
+Route::post('/ajax/visitors/comment', [\App\Http\Controllers\AjaxController::class, 'visitorsComment']);
 
 
 // php artisan make:controller MemberController --resource
