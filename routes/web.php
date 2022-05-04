@@ -49,7 +49,9 @@ Route::get('/mileageReport', [\App\Http\Controllers\MileageController::class, 'r
 
 // 거래
 
-
+// 방명록
+Route::get('/visitors', [\App\Http\Controllers\VisitorsController::class, 'list'])->name('visitors');
+Route::post('/visitors', [\App\Http\Controllers\VisitorsController::class, 'insert']);
 
 
 

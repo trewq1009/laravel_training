@@ -10,7 +10,7 @@
                         <a class="nav-link" href="/trade">Trade</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/view/visitors/list.php">Visitors</a>
+                        <a class="nav-link" href="/visitors">Visitors</a>
                     </li>
                 </ul>
 
