@@ -7,7 +7,7 @@
                         <a class="nav-link" href="/">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/view/trade/list.php">Trade</a>
+                        <a class="nav-link" href="/trade">Trade</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/view/visitors/list.php">Visitors</a>
@@ -20,7 +20,7 @@
                             <a class="nav-link" href="/profile">프로필</a>
                         </li>
                         <li class="nav-item" style="display: flex">
-                            <a class="nav-link" href="/mileage/payment/step1">마일리지 충전</a>
+                            <a class="nav-link" href="/payment/step1">마일리지 충전</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="/logout">로그아웃</a>

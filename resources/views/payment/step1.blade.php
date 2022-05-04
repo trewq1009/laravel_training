@@ -2,7 +2,7 @@
 @include('layout.header')
 
 <section class="container">
-    <form action='<?php echo htmlspecialchars("/mileage/payment/step2") ?>' method="get" id="methodForm">
+    <form action='<?php echo htmlspecialchars("/payment/step2") ?>' method="get" id="methodForm">
         <div style="display: flex; align-items: center; justify-content: center;">
             <span style="font-size: 3rem; color: rgba(13,110,153,1);">충전</span>
         </div>

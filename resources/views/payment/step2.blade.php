@@ -4,7 +4,8 @@
 <section class="container">
     @if($radioValue == 'credit')
         <h1>카드 결제</h1>
-        <form action="<?php echo htmlspecialchars('/mileage/credit') ?>" method="post" id="methodForm" name="methodForm">
+        <form action="<?php echo htmlspecialchars('/payment/credit') ?>" method="post" id="methodForm" name="methodForm">
+            @csrf
             <input type="hidden" value="{{$radioValue}}" name="radioValue">
             <input type="hidden" value="{{$price}}" name="price">
 
@@ -36,7 +37,8 @@
         </form>
     @elseif($radioValue == 'phone')
         <h1>휴대폰 결제</h1>
-        <form action="<?php echo htmlspecialchars('/mileage/phone') ?>" method="post" id="methodForm">
+        <form action="<?php echo htmlspecialchars('/payment/phone') ?>" method="post" id="methodForm">
+            @csrf
             <input type="hidden" value="{{$radioValue}}" name="radioValue">
             <input type="hidden" value="{{$price}}" name="price">
 
@@ -70,8 +72,9 @@
             <button type="submit" class="btn btn-primary">Submit</button>
         </form>
     @elseif($radioValue == 'voucher')
+        @csrf
         <h1>상품권 결제</h1>
-        <form action="<?php echo htmlspecialchars('/mileage/voucher') ?>" method="post" id="methodForm">
+        <form action="<?php echo htmlspecialchars('/payment/voucher') ?>" method="post" id="methodForm">
             <input type="hidden" value="{{$radioValue}}" name="radioValue">
             <input type="hidden" value="{{$price}}" name="price">
 

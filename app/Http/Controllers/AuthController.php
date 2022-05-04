@@ -151,13 +151,15 @@ class AuthController extends Controller
 
             $userData = Auth::user();
 
+            $userMileageData = DB::table('tr_mileage')->where('user_no', $userData->no)->first();
+
             $data = [
                 'id' => $userData->id,
                 'name' => Crypt::decryptString($userData->name),
                 'email' => Crypt::decryptString($userData->email),
-                'using_mileage' => 0,
-                'use_mileage' => 0,
-                'withdrawal_mileage' => 0
+                'using_mileage' => $userMileageData->using_mileage,
+                'use_mileage' => $userMileageData->use_mileage,
+                'withdrawal_mileage' => $userMileageData->real_mileage
             ];
 
             return view('auth.profile', $data);

@@ -68,9 +68,9 @@
             form.method = 'POST';
             form.submit();
         } else if(event.value === 'withdrawal') {
-            form.action = '/mileage';
+            window.location.href = '/withdrawal';
         } else if(event.value === 'mileageReport') {
-            form.action = '/mileage';
+            window.location.href = '/mileageReport';
         } else {
             form.action = '/delete';
             form.method = 'POST';

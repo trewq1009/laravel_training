@@ -25,7 +25,7 @@ class PaymentController extends Controller
             }
             $validated = $validator->validated();
 
-            return view('mileage.step2', $validated);
+            return view('payment.step2', $validated);
 
         } catch (Exception $e) {
             return redirect()->back()->withErrors($validator)->withInput();
@@ -41,22 +41,73 @@ class PaymentController extends Controller
              *  지금은 시간상 충전 들어오면 바로 충전
              */
 
-//            DB::beginTransaction();
-//
-//            $mileageData = DB::table('tr_mileage')->where('user_no', Auth::user()->no)->lockForUpdate()->first();
-//            if(!$mileageData) {
-//                throw new DatabaseException();
+//            $validator =  Validator::make($request->all(),[
+//                'radioValue' => ['required'],
+//                'price' => ['required','numeric'],
+//                'cardNumber' => ['required'],
+//                'cardMonth' => ['required'],
+//                'cardYear' => ['required'],
+//                'cardCVC' => ['required'],
+//                'cardPassword' => ['required']
+//            ]);
+//            if($validator->fails()) {
+//                throw new Exception();
 //            }
+//            $validated = $validator->validated();
+            $inputData = $request->all();
 
+            $cardDate = date("Y-m-d H:i:s", mktime(0, 0, 0, $inputData['cardMonth'] + 1, 0, $inputData['cardYear']));
+            $cardValidity = date("Y-m", strtotime($cardDate));
 
-//            $infomation = [
-//                'card_validity' => Crypt::encryptString($request)
-//            ];
+            DB::beginTransaction();
 
-            var_dump($request);
-            echo $request;
-//            DB::commit();
-            return $request;
+            $mileageData = DB::table('tr_mileage')->where('user_no', Auth::user()->no)->lockForUpdate()->first();
+            if(!$mileageData) {
+                throw new DatabaseException();
+            }
+
+            $information = [
+                'card_validity' => Crypt::encryptString($cardValidity),
+                'card_account_number' => Crypt::encryptString(implode('-', $inputData['cardNumber']))
+            ];
+
+            $paymentNo = DB::table('tr_payment_log')->insertGetId([
+                'user_no' => Auth::user()->no,
+                'method' => 'credit',
+                'payment_mileage' => $inputData['price'],
+                'payment_information' => json_encode($information),
+                'status' => 't',
+                'cancels' => json_encode(['cancel' => 0])
+            ]);
+
+            if(!$paymentNo) {
+                throw new DatabaseException();
+            }
+
+            $mileageLogNo = DB::table('tr_mileage_log')->insertGetId([
+                'user_no' => Auth::user()->no,
+                'method' => 'payment',
+                'method_no' => $paymentNo,
+                'before_mileage' => $mileageData->use_mileage,
+                'use_mileage' => $inputData['price'],
+                'after_mileage' => $mileageData->use_mileage + $inputData['price']
+            ]);
+
+            if(!$mileageLogNo) {
+                throw new DatabaseException();
+            }
+
+            $updateRow = DB::table('tr_mileage')->where('user_no', Auth::user()->no)->update([
+                'use_mileage' => $mileageData->use_mileage + $inputData['price'],
+                'real_mileage' => $mileageData->real_mileage + $inputData['price']
+            ]);
+
+            if(!$updateRow) {
+                throw new DatabaseException();
+            }
+
+            DB::commit();
+            return redirect('/');
 
         } catch (DatabaseException $e) {
             DB::rollBack();

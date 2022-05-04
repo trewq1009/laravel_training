@@ -34,11 +34,20 @@ Route::get('/profile', [\App\Http\Controllers\AuthController::class, 'profile'])
 Route::post('/profile', [\App\Http\Controllers\AuthController::class, 'update'])->middleware('auth');
 
 // 마일리지 충전
-Route::get('/mileage/payment/step1', function() {return view('mileage.step1'); })->middleware('auth')->name('mileage');
-Route::get('/mileage/payment/step2', [\App\Http\Controllers\PaymentController::class, 'method'])->middleware('auth');
-Route::post('/mileage/credit', [\App\Http\Controllers\PaymentController::class, 'credit'])->middleware('auth');
-Route::post('/mileage/phone', [\App\Http\Controllers\PaymentController::class, 'phone'])->middleware('auth');
-Route::post('/mileage/voucher', [\App\Http\Controllers\PaymentController::class, 'voucher'])->middleware('auth');
+Route::get('/payment/step1', function() {return view('payment.step1'); })->middleware('auth')->name('payment');
+Route::get('/payment/step2', [\App\Http\Controllers\PaymentController::class, 'method'])->middleware('auth');
+Route::post('/payment/credit', [\App\Http\Controllers\PaymentController::class, 'credit'])->middleware('auth');
+Route::post('/payment/phone', [\App\Http\Controllers\PaymentController::class, 'phone'])->middleware('auth');
+Route::post('/payment/voucher', [\App\Http\Controllers\PaymentController::class, 'voucher'])->middleware('auth');
+
+// 마일리지 출금
+Route::get('/withdrawal', [\App\Http\Controllers\MileageController::class, 'withdrawal'])->middleware('auth')->name('withdrawal');
+Route::post('/withdrawal', [\App\Http\Controllers\MileageController::class, 'withdrawalAction'])->middleware('auth');
+
+// 마일리지 사용내역
+Route::get('/mileageReport', [\App\Http\Controllers\MileageController::class, 'report'])->middleware('auth')->name('mileageReport');
+
+// 거래
 
 
 
