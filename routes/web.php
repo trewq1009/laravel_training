@@ -48,6 +48,8 @@ Route::post('/withdrawal', [\App\Http\Controllers\MileageController::class, 'wit
 Route::get('/mileageReport', [\App\Http\Controllers\MileageController::class, 'report'])->middleware('auth')->name('mileageReport');
 
 // 거래
+Route::get('/trade', [\App\Http\Controllers\TradeController::class, 'list'])->middleware('auth')->name('trade');
+Route::get('/trade/registration', function() {return view('trade.registration'); })->middleware('auth');
 
 // 방명록
 Route::get('/visitors', [\App\Http\Controllers\VisitorsController::class, 'list'])->name('visitors');
@@ -56,6 +58,8 @@ Route::post('/visitors', [\App\Http\Controllers\VisitorsController::class, 'inse
 // ajax 방명록
 Route::get('/ajax/visitors/list', [\App\Http\Controllers\AjaxController::class, 'visitorsList']);
 Route::post('/ajax/visitors/comment', [\App\Http\Controllers\AjaxController::class, 'visitorsComment']);
+Route::post('/ajax/visitors/delete', [\App\Http\Controllers\AjaxController::class, 'visitorsDelete']);
+Route::post('/ajax/visitors/update', [\App\Http\Controllers\AjaxController::class, 'visitorsUpdate']);
 
 
 // php artisan make:controller MemberController --resource

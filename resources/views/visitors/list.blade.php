@@ -1,7 +1,11 @@
 @include('layout.head')
 @include('layout.header')
+
 <link rel="stylesheet" href="resources/css/app.css">
 <section class="container">
+    @if ($errors->has('field'))
+        <span class="text-danger">{{ $errors->first('field') }}</span>
+    @endif
     <form method="POST" action='<?php echo htmlspecialchars('/visitors');?>' id="methodForm">
         @csrf
         <div>
@@ -13,7 +17,7 @@
                 </span>
             </div>
 
-            @if(!\Illuminate\Support\Facades\Auth::check())
+            @if(!$auth)
             <div class="input-group mb-3">
                 <span class="input-group-text" id="basic-addon1">게스트 패스워드</span>
                 <input type="password" class="form-control" id="visitorsPassword" name="visitorsPassword" required>
@@ -25,7 +29,7 @@
 
     <div style="margin: 1rem 0 0 0;">
         <ul class="list-group">
-            @foreach($data as $item)
+            @foreach($data->data as $item)
             <li class="list-group-item" data-board="{{$item->no}}">
                 <div class="firstBox">
                     <div data-board="{{$item->no}}" data-user="{{$item->user_no}}" data-type="{{$item->user_type}}">
@@ -46,7 +50,7 @@
                 </div>
 
                 <div>
-                    <a href="javascript:void(0);" onclick="commentList(this)" style="color: red;">댓글 0</a>
+                    <a href="javascript:void(0);" onclick="commentList(this)" style="color: red;">댓글 {{$item->comment_count}}</a>
                 </div>
 
                 <div id="commentBox{{$item->no}}" class="commentBox">
@@ -56,7 +60,7 @@
                     <div class="input-group">
                         <textarea class="form-control" aria-label="With textarea" id="comment{{$item->no}}" placeholder="글을 입력해 주세요."></textarea>
                         <span class="input-group-text">
-                            @if(!\Illuminate\Support\Facades\Auth::check())
+                            @if(!$auth)
                             <input type="password" name="boardPassword" style="height: 1.25rem; width: 10rem;" placeholder="password">
                             @endif
                             <button type="button" class="btn btn-secondary" onclick='commentEvent(this)' data-board="{{$item->no}}">등록</button>
@@ -72,7 +76,7 @@
 <script>
     // 방명록 등록
     function btnEvent() {
-        if(!{{\Illuminate\Support\Facades\Auth::check()}}) {
+        @if(!$auth)
             const result = window.confirm('비회원으로 글을 등록 하시겠습니까?');
             if(!result) {
                 return;
@@ -80,7 +84,7 @@
             // 비회원 글 등록
             document.querySelector('#methodForm').submit();
             return;
-        }
+        @endif
         // 회원 글 등록
         document.querySelector('#methodForm').submit();
     };
@@ -102,14 +106,14 @@
                 const re_data = JSON.parse(result);
                 if(re_data.status === 'success') {
                     const comment_box = document.querySelector('#commentBox'+board_num).firstElementChild.firstElementChild;
-                    let htmlData;
+                    let htmlData = '';
                     re_data.data.data.forEach(item => {
                         htmlData += "<li class='list-group-item'>" +
                                     "<div class='firstBox'>" +
                                         "<div data-board='"+item.no+"' data-user='"+item.user_no+"' data-type='"+item.user_type+"'>" +
                                             "<div>" +
                                                 "<span>"+item.user_name+"</span>" +
-                                                "<small>+item.registration_date+</small>" +
+                                                "<small>"+item.registration_date+"</small>" +
                                                 "<small onclick='commentList(this)'>답글</small>" +
                                             "</div>" +
                                             "<div>";
@@ -124,7 +128,7 @@
                                         "</div>" +
                                     "</div>" +
                                     "<div id='contentBox"+item.no+"'>" +
-                                        "<p>item.content</p>" +
+                                        "<p>"+item.content+"</p>" +
                                     "</div>" +
                                     "<div id='commentBox"+item.no+"' class='commentBox'>" +
                                         "<div id='commentBlock'>" +
@@ -134,9 +138,9 @@
                                             "<textarea class='form-control' aria-label='With textarea' id='comment"+item.no+"' placeholder='글을 입력해 주세요.'></textarea>" +
                                             "<span class='input-group-text'>";
 
-                        if(!{{\Illuminate\Support\Facades\Auth::check()}}) {
+                        @if(!$auth)
                             htmlData += "<input type='password' name='boardPassword' style='height: 1.25rem; width:10rem;' placeholder='password'>";
-                        }
+                        @endif
 
                         htmlData += "<button type='button' class='btn btn-secondary' onclick='commentEvent(this)' data-board='"+item.no+"'>등록</button>" +
                                             "</span>" +
@@ -176,7 +180,7 @@
         const parent_board_num = event.dataset.board;
         const comment = document.getElementById('comment'+parent_board_num).value;
         let password;
-        if(!{{\Illuminate\Support\Facades\Auth::check()}}) {
+        @if(!$auth)
             const result = window.confirm('비회원으로 댓글을 등록 하시겠습니까?');
             if (!result) {
                 return;
@@ -187,7 +191,7 @@
                 window.alert('비회원은 패스워드가 필수 입니다.');
                 return;
             }
-        }
+        @endif
         await $.ajax({
             headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
             type: 'POST',
@@ -200,12 +204,115 @@
             success: result => {
                 const re_data = JSON.parse(result);
                 console.log(re_data);
-                // if (re_data.status === 'success') {
-                //     window.alert(re_data.message);
-                //     window.location.reload();
-                // } else {
-                //     window.alert(re_data.message);
-                // }
+                if (re_data.status === 'success') {
+                    window.alert(re_data.message);
+                    window.location.reload();
+                } else {
+                    window.alert(re_data.message);
+                }
+            }, error: e => {
+                console.log(e);
+                window.alert('에러가 발생했습니다.')
+            }
+        });
+    };
+
+    function deleteAction(event) {
+        const board_no = event.parentElement.parentElement.dataset.board;
+        const type = event.parentElement.parentElement.dataset.type;
+        let password = '';
+
+        if(type === 'm') {
+            @if(!$auth)
+            window.alert('로그인 후 이용해 주세요.');
+            return;
+            @endif
+        } else {
+            password = event.previousElementSibling.previousElementSibling.value;
+            if(password === '') {
+                window.alert('패스워드를 입력해 주세요');
+                return;
+            }
+        }
+        const result = window.confirm('삭제 하시겠습니까?');
+        if(!result) {
+            return;
+        }
+
+        $.ajax({
+            headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+            type : 'POST',
+            url : '/ajax/visitors/delete',
+            data : {
+                board_no: board_no,
+                board_type : type,
+                password: password
+            },
+            success : result => {
+                const re_data = JSON.parse(result);
+                console.log(re_data);
+                if(re_data.status === 'success') {
+                    window.alert(re_data.message);
+                    window.location.reload();
+                } else {
+                    window.alert(re_data.message);
+                }
+            },error : e => {
+                console.log(e);
+                window.alert('에러가 발생했습니다.')
+            }
+        });
+    }
+
+    function updateHtml(event) {
+        const board_no = event.parentElement.parentElement.dataset.board;
+        const board_type = event.parentElement.parentElement.dataset.type;
+        if(board_type === 'm') {
+            @if(!$auth)
+                window.alert('로그인 후 이용해 주세요.');
+                return;
+            @endif
+        }
+        const textareaBox = document.querySelector('#contentBox'+board_no);
+        const inner_text = textareaBox.firstElementChild.innerHTML;
+        textareaBox.innerHTML = '<div class="input-group"><textarea class="form-control" id="updateText'+board_no+'" aria-label="With textarea" placeholder="글을 입력해 주세요."></textarea>' +
+            '<span class="input-group-text"><button type="button" onclick="updateAction(this)" data-type="'+board_type+'" data-board="'+board_no+'" class="btn btn-secondary">수정</button></span></div>';
+
+        textareaBox.firstElementChild.firstElementChild.innerHTML = inner_text;
+    }
+
+    function updateAction(event) {
+        const board_no = event.dataset.board;
+        const board_type = event.dataset.type;
+        const text_data = document.querySelector('#updateText'+board_no).value;
+        let password = '';
+
+        if(board_type === 'g') {
+            password = document.querySelector('#boardPassword' + board_no).value;
+            if (password === '') {
+                window.alert('비회원 게시글은 패스워드가 필수 입니다.');
+                return;
+            }
+        }
+        $.ajax({
+            headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+            type: 'POST',
+            url: '/ajax/visitors/update',
+            data: {
+                board_no: board_no,
+                text_data: text_data,
+                board_type: board_type,
+                password: password
+            },
+            success: result => {
+                const re_data = JSON.parse(result);
+                if (re_data.status === 'success') {
+                    window.alert(re_data.message);
+                    window.location.reload();
+                } else {
+                    window.alert(re_data.message);
+                    window.location.reload();
+                }
             }, error: e => {
                 console.log(e);
                 window.alert('에러가 발생했습니다.')
