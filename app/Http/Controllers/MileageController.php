@@ -95,7 +95,7 @@ class MileageController extends Controller
         try {
 
             return view('mileage.report', [
-                'list' => DB::table('tr_mileage_log')->where('user_no', Auth::user()->no)->simplePaginate(10)
+                'list' => DB::table('tr_mileage_log')->where('user_no', Auth::user()->no)->orderByDesc('no')->simplePaginate(10)
             ]);
 
         } catch (Exception $e) {

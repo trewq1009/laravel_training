@@ -4,19 +4,19 @@
 <section class="container">
     <div style="margin: 1rem 0">
         <a class="btn btn-outline-primary" href="/trade/registration">거래등록</a>
-        <a class="btn btn-outline-info" href="trade_list.php">거래내역</a>
+        <a class="btn btn-outline-info" href="/trade/list">거래내역</a>
     </div>
 
     <div class="list-group">
         @if($data)
             @foreach($data as $item)
-            <a href="#" class="list-group-item list-group-item-action">
+            <a href="/trade/detail/{{$item->no}}" class="list-group-item list-group-item-action">
                 <div class="d-flex w-100 justify-content-between">
-                    <h5 class="mb-1">{{$item['title']}}</h5>
-                    <span>{{$item['price']}} 원</span>
+                    <h5 class="mb-1">{{$item->product_name}}</h5>
+                    <span>{{$item->price}} 원</span>
                 </div>
                 <div class="d-flex w-100 justify-content-between">
-                    <small>{{$item['registration_date']}}</small>
+                    <small>{{$item->registration_date}}</small>
                 </div>
             </a>
             @endforeach
