@@ -2,20 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Mail as Email;
-use Illuminate\Support\Facades\Crypt;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use App\Models\NotifyMail;
 
 class MailController extends Controller
 {
-    public static function sendSignUpEmail($name, $email)
+    public function index()
     {
-        $key = env('APP_NAME');
-        $data = [
-            'name' => $name,
-            'hashCode' => Crypt::encryptString($key)
-        ];
-
-        Mail::to($email)->send(new Email($data));
+        Mail::to('kjk1009@imicorp.co.kr')->send(new NotifyMail());
+        if(Mail::failures()) {
+            echo 'fail';
+        } else {
+            echo 'success';
+        }
     }
 }

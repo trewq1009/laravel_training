@@ -6,20 +6,18 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-class Mail extends Mailable
+class NotifyMail extends Mailable
 {
     use Queueable, SerializesModels;
-
-    protected $data;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct($data)
+    public function __construct()
     {
-        $this->data = $data;
+
     }
 
     /**
@@ -29,7 +27,6 @@ class Mail extends Mailable
      */
     public function build()
     {
-        return $this->from(env('MAIL_FROM_ADDRESS'), env('MAIL_USERNAME'))->subject('회원가입 인증 메일')
-            ->view('mail.signup', ['data' => $this->data]);
+        return $this->view('mail.signup');
     }
 }
