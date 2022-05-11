@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Exception;
 use App\Exceptions\DatabaseException;
 
@@ -14,7 +16,10 @@ class TradeController extends Controller
     public function list()
     {
         try {
-            return view('trade.list', ['data' => DB::table('tr_trade_board')->where('status', 't')->orderByDesc('no')->paginate(10)]);
+            return view('trade.list', [
+                'data' => DB::table('tr_trade_board')->where('status', 't')->orderByDesc('no')->paginate(10),
+                'auth' => Auth::user()
+            ]);
         } catch (Exception $e) {
             return redirect()->back();
         }
@@ -79,7 +84,7 @@ class TradeController extends Controller
             $boardModel = DB::table('tr_trade_board')->where('status', 't')->where('no', $no)->first();
             $imageModel = DB::table('tr_image')->where('status', 't')->where('method', 'trade')->where('reference_no', $no)->first();
 
-            return view('trade.detail', ['board' => $boardModel, 'image' => $imageModel]);
+            return view('trade.detail', ['board' => $boardModel, 'image' => $imageModel, 'auth' => Auth::user()]);
 
         } catch (Exception $e) {
             return redirect()->back();
@@ -304,6 +309,63 @@ class TradeController extends Controller
 
             DB::commit();
             return redirect('/trade/list');
+
+        } catch (DatabaseException $e) {
+            DB::rollBack();
+            return redirect()->back()->withErrors($validator);
+        } catch (Exception $e) {
+            return redirect()->back()->withErrors($validator);
+        }
+    }
+
+    public function delete(Request $request, $no)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'boardNo' => ['required', 'integer']
+            ]);
+            if($validator->fails()) {
+                throw new Exception();
+            }
+            $validated = $validator->validated();
+
+            if($no !== $validated['boardNo']) {
+                $validator->errors()->add('boardNo', '데이터가 변경 되었습니다.');
+                throw new Exception();
+            }
+
+            DB::beginTransaction();
+
+            $boardModel = DB::table('tr_trade_board')->where('no', $validated['boardNo'])->where('status', 't')->lockForUpdate()->first();
+            if(!$boardModel) {
+                $validator->errors()->add('boardNo', '해당 게시글이 존재하지 않습니다.');
+                throw new DatabaseException();
+            }
+            if($boardModel->user_no !== Auth::user()->no) {
+                $validator->errors()->add('boardNo', '해당 게시글에 대한 권한이 없습니다.');
+                throw new DatabaseException();
+            }
+
+            $boardUpdateRow = DB::table('tr_trade_board')->where('no', $validated['boardNo'])->update(['status' => 'f', 'update_date' => date('Y-m-d H:i:s')]);
+            if(!$boardUpdateRow) {
+                $validator->errors()->add('boardNo', '작업에 실패하였습니다.');
+                throw new DatabaseException();
+            }
+
+            $imageModels = DB::table('tr_image')->where('method', 'trade')->where('reference_no', $validated['boardNo'])->lockForUpdate()->get();
+            if(!$imageModels) {
+                $validator->errors()->add('boardNo', '작업에 실패하였습니다.');
+                throw new DatabaseException();
+            }
+
+            $imageUpdateRow = DB::table('tr_image')->where('method', 'trade')->where('reference_no', $validated['boardNo'])->update(['status' => 'f', 'update_date' => date('Y-m-d H:i:s')]);
+            if(!$imageUpdateRow) {
+                $validator->errors()->add('boardNo', '이미지 삭제에 실패하였습니다.');
+                throw new DatabaseException();
+            }
+
+            DB::commit();
+            return redirect('/trade');
 
         } catch (DatabaseException $e) {
             DB::rollBack();

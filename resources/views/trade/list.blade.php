@@ -17,6 +17,9 @@
                 </div>
                 <div class="d-flex w-100 justify-content-between">
                     <small>{{$item->registration_date}}</small>
+                    @if($item->user_no === $auth->no)
+                    <span>본인글</span>
+                    @endif
                 </div>
             </a>
             @endforeach

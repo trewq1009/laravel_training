@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
@@ -17,7 +18,7 @@ class AuthController extends Controller
         try {
             $validator =  Validator::make($request->all(),[
                 'userId' => ['required','alpha_num', 'min:5','max:20'],
-                'userName' => ['required','alpha'],
+                'userName' => ['required','alpha', 'max:10'],
                 'userPw' => ['required','min:8','max:20'],
                 'userPwC' => ['required','same:userPw','min:8','max:20'],
                 'userEmail' => ['required','email:rfc,filter']

@@ -2,7 +2,7 @@
 @include('layout.header')
 
 <section class="container">
-    <form style="margin: 3rem 0 0 0" action="{{htmlspecialchars("/trade/detail/".$board->no)}}" method="post">
+    <form style="margin: 3rem 0 0 0" action="{{htmlspecialchars("/trade/detail/".$board->no)}}" id="methodForm" method="post">
         @csrf
         @if ($errors->has('boardNo'))
             <span class="text-danger">{{ $errors->first('boardNo') }}</span>
@@ -10,6 +10,9 @@
         <input type="hidden" name="boardNo" value="{{$board->no}}">
         <div style="margin: 0 0 1rem 0">
             <button type="submit" class="btn btn-primary">거래 신청</button>
+            @if($board->user_no === $auth->no)
+            <button type="button" onclick="btnAction(this)" class="btn btn-danger">게시글 삭제</button>
+            @endif
         </div>
         <div class="input-group mb-3">
             <span class="input-group-text" id="basic-addon1">상품명</span>
@@ -36,6 +39,18 @@
         </div>
     </form>
 </section>
-
+<script>
+    function btnAction(event) {
+        if(!window.confirm('게시글을 삭제 하시겠습니까?')) {
+            return;
+        }
+        let hiddenMethod = document.createElement('input');
+        hiddenMethod.setAttribute('type', 'hidden');
+        hiddenMethod.setAttribute('name', '_method');
+        hiddenMethod.setAttribute('value', 'delete');
+        document.querySelector('#methodForm').prepend(hiddenMethod);
+        document.querySelector('#methodForm').submit();
+    }
+</script>
 
 @include('layout.footer')

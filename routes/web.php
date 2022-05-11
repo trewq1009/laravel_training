@@ -17,7 +17,6 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-
 // 회원가입
 Route::get('/register', function() {return view('auth.join'); })->middleware('guest');
 Route::post('/register', [\App\Http\Controllers\AuthController::class, 'create'])->middleware('guest');
@@ -51,8 +50,9 @@ Route::get('/mileageReport', [\App\Http\Controllers\MileageController::class, 'r
 Route::get('/trade', [\App\Http\Controllers\TradeController::class, 'list'])->middleware('auth')->name('trade');
 Route::get('/trade/registration', function() {return view('trade.registration'); })->middleware('auth');
 Route::post('/trade/registration', [\App\Http\Controllers\TradeController::class, 'insert'])->middleware('auth');
-Route::get('/trade/detail/{no}', [\App\Http\Controllers\TradeController::class, 'detail']);
+Route::get('/trade/detail/{no}', [\App\Http\Controllers\TradeController::class, 'detail'])->middleware('auth');
 Route::post('/trade/detail/{no}', [\App\Http\Controllers\TradeController::class, 'trading'])->middleware('auth');
+Route::delete('/trade/detail/{no}', [\App\Http\Controllers\TradeController::class, 'delete'])->middleware('auth');
 Route::get('/trade/list', [\App\Http\Controllers\TradeController::class, 'tradeList'])->middleware('auth');
 Route::post('/trade/list', [\App\Http\Controllers\TradeController::class, 'action'])->middleware('auth');
 
