@@ -72,7 +72,7 @@ class AuthController extends Controller
             }
 
             // 인증 이메일 발송 구역
-            (new MailController)->sendMail($validated, Crypt::encryptString($userNo));
+            (new MailController)->sendMail($validated['userEmail'], Crypt::encryptString($userNo));
 
             DB::commit();
             return view('auth.joinSuccess');

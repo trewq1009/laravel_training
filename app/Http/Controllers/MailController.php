@@ -13,10 +13,10 @@ use App\Exceptions\DatabaseException;
 
 class MailController extends Controller
 {
-    public function sendMail($userData, $no)
+    public function sendMail($email, $no)
     {
         try {
-            Mail::to($userData['userEmail'])->send(new NotifyMail($no));
+            Mail::to($email)->send(new NotifyMail($no));
             if(Mail::failures()) {
                 throw new Exception();
             }
@@ -27,9 +27,11 @@ class MailController extends Controller
         }
     }
 
-    public function signMail($hash)
+    public function signMail(Request $request, $hash)
     {
         try {
+            $data = $request->all();
+
             $no = Crypt::decryptString($hash);
 
             $userModel = DB::table('tr_account')->where('email_status', 'f')->where('no', $no)->first();
@@ -39,7 +41,7 @@ class MailController extends Controller
 
             DB::beginTransaction();
 
-            $userUpdateRow = DB::table('tr_account')->where('no', $no)->update(['email_status', 't']);
+            $userUpdateRow = DB::table('tr_account')->where('no', $no)->update(['email_status'=>'t']);
             if(!$userUpdateRow) {
                 throw new DatabaseException();
             }
@@ -49,9 +51,9 @@ class MailController extends Controller
 
         } catch (DatabaseException $e) {
             DB::rollBack();
-            return view('errors.404');
+            return view('errors.error', ['message' => $e->getMessage()]);
         } catch (Exception $e) {
-            return view('errors.404');
+            return view('errors.error', ['message' => $e->getMessage()]);
         }
     }
 }
