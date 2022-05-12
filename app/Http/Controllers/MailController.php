@@ -30,8 +30,6 @@ class MailController extends Controller
     public function signMail(Request $request, $hash)
     {
         try {
-            $data = $request->all();
-
             $no = Crypt::decryptString($hash);
 
             $userModel = DB::table('tr_account')->where('email_status', 'f')->where('no', $no)->first();
