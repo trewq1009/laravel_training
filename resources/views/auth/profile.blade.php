@@ -72,6 +72,7 @@
         } else if(event.value === 'mileageReport') {
             window.location.href = '/mileageReport';
         } else {
+            if(!window.confirm('탈퇴 신청을 하시겠습니까?')) return;
             form.action = '/delete';
             form.method = 'POST';
             form.submit();

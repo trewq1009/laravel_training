@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Exceptions\DatabaseException;
 use Exception;
+use phpDocumentor\Reflection\TypeResolver;
 
 class AuthController extends Controller
 {
@@ -107,6 +108,10 @@ class AuthController extends Controller
                 $validator->errors()->add('userId', '이메일 인증을 완료해 주세요.');
                 throw new Exception();
             }
+            if($userModelData->status === 'a' || $userModelData->status === 'f') {
+                $validator->errors()->add('userId', '탈퇴신청 및 탈퇴 회원 입니다.');
+                throw new Exception();
+            }
             // 검증 후 로그인 검증 완료면 true
             if(!Auth::attempt($userData)) {
                 $validator->errors()->add('userId', '계정을 다시 확인해 주세요.');
@@ -196,6 +201,33 @@ class AuthController extends Controller
             return redirect()->back()->withErrors($validator);
         } catch (Exception $e) {
             return redirect()->back()->withErrors($validator);
+        }
+    }
+
+    public function delete(Request $request)
+    {
+        try {
+
+            DB::beginTransaction();
+            $userUpdateRow = DB::table('tr_account')->where('no', Auth::user()->no)->update(['status'=>'a', 'update_date'=>date('Y-m-d H:i:s')]);
+            if(!$userUpdateRow) {
+                throw new DatabaseException();
+            }
+            DB::commit();
+
+            Auth::logout();
+
+            $request->session()->invalidate();
+
+            $request->session()->regenerateToken();
+
+            return redirect('/');
+
+        } catch (DatabaseException $e) {
+            DB::rollBack();
+            return redirect()->back();
+        } catch (Exception $e) {
+            return redirect()->back();
         }
     }
 }

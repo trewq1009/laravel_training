@@ -32,6 +32,9 @@ Route::get('/logout', [\App\Http\Controllers\AuthController::class, 'logout'])->
 Route::get('/profile', [\App\Http\Controllers\AuthController::class, 'profile'])->middleware('auth')->name('profile');
 Route::post('/profile', [\App\Http\Controllers\AuthController::class, 'update'])->middleware('auth');
 
+// 회원탈퇴
+Route::post('/delete', [\App\Http\Controllers\AuthController::class, 'delete'])->middleware('auth');
+
 // 마일리지 충전
 Route::get('/payment/step1', function() {return view('payment.step1'); })->middleware('auth')->name('payment');
 Route::get('/payment/step2', [\App\Http\Controllers\PaymentController::class, 'method'])->middleware('auth');
