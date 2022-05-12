@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use App\Models\NotifyMail;
+use Illuminate\Support\Facades\Log;
 
 class MailController extends Controller
 {
@@ -12,9 +13,9 @@ class MailController extends Controller
     {
         Mail::to('kjk1009@imicorp.co.kr')->send(new NotifyMail());
         if(Mail::failures()) {
-            echo 'fail';
+            Log::error('메일 발송 오류');
         } else {
-            echo 'success';
+            Log::info('메일 발송 성공');
         }
     }
 }

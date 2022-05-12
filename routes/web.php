@@ -42,7 +42,6 @@ Route::post('/payment/voucher', [\App\Http\Controllers\PaymentController::class,
 // 마일리지 출금
 Route::get('/withdrawal', [\App\Http\Controllers\MileageController::class, 'withdrawal'])->middleware('auth')->name('withdrawal');
 Route::post('/withdrawal', [\App\Http\Controllers\MileageController::class, 'withdrawalAction'])->middleware('auth');
-
 // 마일리지 사용내역
 Route::get('/mileageReport', [\App\Http\Controllers\MileageController::class, 'report'])->middleware('auth')->name('mileageReport');
 

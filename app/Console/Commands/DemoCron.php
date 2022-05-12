@@ -54,6 +54,7 @@ class DemoCron extends Command
 //                $disk->move($item->image_name, 이동할 경로)
                     if($disk->exists($item->image_name)) {
                         $disk->delete($item->image_name);
+                        DB::table('tr_image')->where('no', $item->no)->delete();
                         Log::info('삭제된 이미지 : '.$item->image_name);
                     } else {
                         Log::warning('이미지 경로 못찾음 : '.$item->image_name);
