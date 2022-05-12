@@ -41,7 +41,7 @@ class DemoCron extends Command
     public function handle()
     {
         try {
-            Log::info("Cron Job running at : ". now());
+            Log::info("Cron Job Image Delete running at : ". now());
             Log::info('이미지 삭제 로직 시작'.now());
             $imageList = DB::table('tr_image')->where('status', 'f')->get();
 
@@ -55,7 +55,6 @@ class DemoCron extends Command
                     if($disk->exists($item->image_name)) {
                         $disk->delete($item->image_name);
                         DB::table('tr_image')->where('no', $item->no)->delete();
-                        Log::info('삭제된 이미지 : '.$item->image_name);
                     } else {
                         Log::warning('이미지 경로 못찾음 : '.$item->image_name);
                     }
@@ -63,8 +62,7 @@ class DemoCron extends Command
             } else {
                 Log::info('삭제할 이미지 없음.');
             }
-            Log::info('이미지 삭제 로직 종료');
-            Log::info('Cron Job stop at : '.now());
+            Log::info('Cron Job Image Delete running stop at : '.now());
 
         } catch (Exception $e) {
             Log::emergency($e->getMessage());

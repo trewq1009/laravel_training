@@ -6,16 +6,22 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use App\Models\NotifyMail;
 use Illuminate\Support\Facades\Log;
+use Exception;
 
 class MailController extends Controller
 {
-    public function index()
+    public function sendMail($userData, $no)
     {
-        Mail::to('kjk1009@imicorp.co.kr')->send(new NotifyMail());
-        if(Mail::failures()) {
-            Log::error('메일 발송 오류');
-        } else {
+        try {
+
+            Mail::to($userData['userEmail'])->send(new NotifyMail($no));
+            if(Mail::failures()) {
+                throw new Exception();
+            }
             Log::info('메일 발송 성공');
+        } catch (Exception $e) {
+            Log::error('메일 발송 오류');
+            Log::error($e->getMessage());
         }
     }
 }

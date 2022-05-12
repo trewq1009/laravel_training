@@ -10,14 +10,16 @@ class NotifyMail extends Mailable
 {
     use Queueable, SerializesModels;
 
+    protected $hash;
+
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct()
+    public function __construct($data)
     {
-
+        $this->hash = $data;
     }
 
     /**
@@ -27,6 +29,6 @@ class NotifyMail extends Mailable
      */
     public function build()
     {
-        return $this->view('mail.signup');
+        return $this->view('mail.signup', ['data' => $this->hash]);
     }
 }

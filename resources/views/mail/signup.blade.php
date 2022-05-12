@@ -1,11 +1,11 @@
-Hello
+안녕하세요
 <br><br>
-Welcome to Training Laravel!
+회원가입을 진심으로 감사드립니다.
 <br>
-Please click the below link to verify your email end activate your account!
+아래에 링크를 클릭하여 회원가입을 완료해 주세요.
 <br><br>
-<a href="http://127.0.0.1:8000/verify?code=test">Click Here!</a>
+<a href="http://127.0.0.1:8000/email/{{$data}}">Click Here!</a>
 
 <br><br>
-Thank you!
+감사합니다.
 <br>

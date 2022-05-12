@@ -65,7 +65,7 @@ Route::post('/ajax/visitors/comment', [\App\Http\Controllers\AjaxController::cla
 Route::post('/ajax/visitors/delete', [\App\Http\Controllers\AjaxController::class, 'visitorsDelete']);
 Route::post('/ajax/visitors/update', [\App\Http\Controllers\AjaxController::class, 'visitorsUpdate']);
 
-Route::get('send-email', [\App\Http\Controllers\MailController::class, 'index']);
+Route::get('send-email', [\App\Http\Controllers\MailController::class, 'sendMail']);
 
 // php artisan make:controller MemberController --resource
 //Route::resource('auth', \App\Http\Controllers\MemberController::class);

@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
@@ -71,8 +70,8 @@ class AuthController extends Controller
                 throw new DatabaseException();
             }
 
-            // 이메일 인증 추가 작업 구역
-//            MailController::sendSignUpEmail($validated['userName'], $validated['userEmail']);
+            // 인증 이메일 발송 구역
+            (new MailController)->sendMail($validated, Crypt::encryptString($userNo));
 
             DB::commit();
             return view('auth.joinSuccess');
@@ -92,7 +91,6 @@ class AuthController extends Controller
                 'userId' => ['required','alpha_num', 'min:5','max:20'],
                 'userPw' => ['required','min:8','max:20'],
             ]);
-
             if($validator->fails()) {
                 throw new Exception();
             }
@@ -100,9 +98,6 @@ class AuthController extends Controller
             $userData['id'] = $validated['userId'];
             $userData['password'] = $validated['userPw'];
 
-
-
-            // 이메일 인증
             $userModelData = DB::table('tr_account')->where('id', $userData['id'])->first();
             if($userModelData->id !== $userData['id']) {
                 $validator->errors()->add('userId', '아이디를 다시 확인해 주세요.');
@@ -112,7 +107,6 @@ class AuthController extends Controller
                 $validator->errors()->add('userId', '이메일 인증을 완료해 주세요.');
                 throw new Exception();
             }
-
             // 검증 후 로그인 검증 완료면 true
             if(!Auth::attempt($userData)) {
                 $validator->errors()->add('userId', '계정을 다시 확인해 주세요.');
