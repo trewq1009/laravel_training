@@ -28,13 +28,15 @@ class AuthController extends Controller
             }
             $validated = $validator->validated();
 
-            $dbIdData = DB::table('tr_account')->where('id', $validated['userId'])->where('status', 't')->first();
+            $dbIdData = DB::table('tr_account')->where('id', $validated['userId'])
+                ->where('status', 't')->first();
             if($dbIdData) {
                 $validator->errors()->add('userId', '중복된 아이디 입니다.');
                 throw new Exception();
             }
 
-            $dbEmailData = DB::table('tr_account')->where('email', $validated['userEmail'])->where('status', 't')->first();
+            $dbEmailData = DB::table('tr_account')->where('email', $validated['userEmail'])
+                ->where('status', 't')->first();
             if($dbEmailData) {
                 $validator->errors()->add('userEmail', '중복된 이메일 입니다.');
                 throw new Exception();
@@ -185,7 +187,10 @@ class AuthController extends Controller
             DB::beginTransaction();
 
             $updateRow = DB::table('tr_account')->where('no', Auth::user()->no)
-                ->update(['name' => Crypt::encryptString($validated['userName']), 'password' => Hash::make($validated['userPw'])]);
+                ->update([
+                    'name' => Crypt::encryptString($validated['userName']),
+                    'password' => Hash::make($validated['userPw'])
+                ]);
 
             if(!$updateRow) {
                 $validator->errors()->add('field', '회원 정보 수정에 실패했습니다.');
@@ -208,7 +213,8 @@ class AuthController extends Controller
         try {
 
             DB::beginTransaction();
-            $userUpdateRow = DB::table('tr_account')->where('no', Auth::user()->no)->update(['status'=>'a', 'update_date'=>date('Y-m-d H:i:s')]);
+            $userUpdateRow = DB::table('tr_account')->where('no', Auth::user()->no)
+                ->update(['status'=>'a', 'update_date'=>date('Y-m-d H:i:s')]);
             if(!$userUpdateRow) {
                 throw new DatabaseException();
             }
