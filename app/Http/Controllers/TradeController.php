@@ -82,7 +82,8 @@ class TradeController extends Controller
     {
         try {
             $boardModel = DB::table('tr_trade_board')->where('status', 't')->where('no', $no)->first();
-            $imageModel = DB::table('tr_image')->where('status', 't')->where('method', 'trade')->where('reference_no', $no)->first();
+            $imageModel = DB::table('tr_image')->where('status', 't')
+                ->where('method', 'trade')->where('reference_no', $no)->first();
 
             return view('trade.detail', ['board' => $boardModel, 'image' => $imageModel, 'auth' => Auth::user()]);
 
@@ -107,7 +108,8 @@ class TradeController extends Controller
 
             DB::beginTransaction();
 
-            $boardModel = DB::table('tr_trade_board')->where('status', 't')->where('no', $validated['boardNo'])->first();
+            $boardModel = DB::table('tr_trade_board')->where('status', 't')
+                ->where('no', $validated['boardNo'])->first();
 
             if($boardModel->user_no === Auth::user()->no) {
                 $validator->errors()->add('boardNo', '본인글에 신청 하셨습니다.');
@@ -121,9 +123,16 @@ class TradeController extends Controller
             }
             $calcMileage = $buyerMileageModel->use_mileage - $boardModel->price;
             if($calcMileage < $buyerMileageModel->real_mileage) {
-                $params = ['use_mileage' => $calcMileage, 'real_mileage' => $calcMileage, 'using_mileage' => $buyerMileageModel->using_mileage + $boardModel->price, 'update_date' => date('Y-m-d H:i:s')];
+                $params = [
+                    'use_mileage' => $calcMileage, 'real_mileage' => $calcMileage,
+                    'using_mileage' => $buyerMileageModel->using_mileage + $boardModel->price,
+                    'update_date' => date('Y-m-d H:i:s')
+                ];
             } else {
-                $params = ['use_mileage' => $calcMileage, 'using_mileage' => $buyerMileageModel->using_mileage + $boardModel->price, 'update_date' => date('Y-m-d H:i:s')];
+                $params = [
+                    'use_mileage' => $calcMileage, 'using_mileage' => $buyerMileageModel->using_mileage + $boardModel->price,
+                    'update_date' => date('Y-m-d H:i:s')
+                ];
             }
 
             $mileageUpdateRow = DB::table('tr_mileage')->where('user_no', Auth::user()->no)->update($params);
@@ -171,7 +180,8 @@ class TradeController extends Controller
     {
         try {
 
-            $pagination = DB::table('tr_trade_log')->where('seller_no', Auth::user()->no)->orWhere('buyer_no', Auth::user()->no)->orderByDesc('no')->paginate(10);
+            $pagination = DB::table('tr_trade_log')->where('seller_no', Auth::user()->no)
+                ->orWhere('buyer_no', Auth::user()->no)->orderByDesc('no')->paginate(10);
             $paging = (object)$pagination;
             $paging = json_encode($paging);
             $paging = json_decode($paging);
@@ -241,14 +251,20 @@ class TradeController extends Controller
             $tradeLog = DB::table('tr_trade_log')->where('no', $validated['tradeNo'])->lockForUpdate()->first();
             if($tradeLog->seller_no === Auth::user()->no) {
                 // 판매
-                $params = ['seller_trade_status' => 't', 'seller_status_date' => date('Y-m-d H:i:s'), 'update_date' => date('Y-m-d H:i:s')];
+                $params = [
+                    'seller_trade_status' => 't', 'seller_status_date' => date('Y-m-d H:i:s'),
+                    'update_date' => date('Y-m-d H:i:s')
+                ];
                 if($tradeLog->buyer_trade_status === 't') {
                     $params = array_merge($params, ['status' => 't', 'trade_success_date' => date('Y-m-d H:i:s')]);
                     $flag = true;
                 }
             } else {
                 // 구매
-                $params = ['buyer_trade_status' => 't', 'buyer_status_date' => date('Y-m-d H:i:s'), 'update_date' => date('Y-m-d H:i:s')];
+                $params = [
+                    'buyer_trade_status' => 't', 'buyer_status_date' => date('Y-m-d H:i:s'),
+                    'update_date' => date('Y-m-d H:i:s')
+                ];
                 if($tradeLog->seller_trade_status === 't') {
                     $params = array_merge($params, ['status' => 't', 'trade_success_date' => date('Y-m-d H:i:s')]);
                     $flag = true;
@@ -336,7 +352,8 @@ class TradeController extends Controller
 
             DB::beginTransaction();
 
-            $boardModel = DB::table('tr_trade_board')->where('no', $validated['boardNo'])->where('status', 't')->lockForUpdate()->first();
+            $boardModel = DB::table('tr_trade_board')->where('no', $validated['boardNo'])
+                ->where('status', 't')->lockForUpdate()->first();
             if(!$boardModel) {
                 $validator->errors()->add('boardNo', '해당 게시글이 존재하지 않습니다.');
                 throw new DatabaseException();
@@ -346,19 +363,23 @@ class TradeController extends Controller
                 throw new DatabaseException();
             }
 
-            $boardUpdateRow = DB::table('tr_trade_board')->where('no', $validated['boardNo'])->update(['status' => 'f', 'update_date' => date('Y-m-d H:i:s')]);
+            $boardUpdateRow = DB::table('tr_trade_board')->where('no', $validated['boardNo'])
+                ->update(['status' => 'f', 'update_date' => date('Y-m-d H:i:s')]);
             if(!$boardUpdateRow) {
                 $validator->errors()->add('boardNo', '작업에 실패하였습니다.');
                 throw new DatabaseException();
             }
 
-            $imageModels = DB::table('tr_image')->where('method', 'trade')->where('reference_no', $validated['boardNo'])->lockForUpdate()->get();
+            $imageModels = DB::table('tr_image')->where('method', 'trade')
+                ->where('reference_no', $validated['boardNo'])->lockForUpdate()->get();
             if(!$imageModels) {
                 $validator->errors()->add('boardNo', '작업에 실패하였습니다.');
                 throw new DatabaseException();
             }
 
-            $imageUpdateRow = DB::table('tr_image')->where('method', 'trade')->where('reference_no', $validated['boardNo'])->update(['status' => 'f', 'update_date' => date('Y-m-d H:i:s')]);
+            $imageUpdateRow = DB::table('tr_image')->where('method', 'trade')
+                ->where('reference_no', $validated['boardNo'])
+                ->update(['status' => 'f', 'update_date' => date('Y-m-d H:i:s')]);
             if(!$imageUpdateRow) {
                 $validator->errors()->add('boardNo', '이미지 삭제에 실패하였습니다.');
                 throw new DatabaseException();
