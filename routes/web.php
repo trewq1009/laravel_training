@@ -17,58 +17,85 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// 회원가입
-Route::get('/register', function() {return view('auth.join'); })->middleware('guest');
-Route::post('/register', [\App\Http\Controllers\AuthController::class, 'create'])->middleware('guest');
-
-// 로그인
-Route::get('/login', function() {return view('auth.login'); })->middleware('guest')->name('login');
-Route::post('/login', [\App\Http\Controllers\AuthController::class, 'login'])->middleware('guest');
-
-// 로그아웃
-Route::get('/logout', [\App\Http\Controllers\AuthController::class, 'logout'])->middleware('auth');
-
-// 프로필
-Route::get('/profile', [\App\Http\Controllers\AuthController::class, 'profile'])->middleware('auth')->name('profile');
-Route::post('/profile', [\App\Http\Controllers\AuthController::class, 'update'])->middleware('auth');
-
-// 회원탈퇴
-Route::post('/delete', [\App\Http\Controllers\AuthController::class, 'delete'])->middleware('auth');
+Route::controller(\App\Http\Controllers\AuthController::class)->group(function() {
+    Route::middleware('guest')->group(function() {
+        Route::get('/register', function() {return view('auth.join'); });    // 회원 가입
+        Route::post('/register', 'create');
+        Route::get('/login', function() {return view('auth.login'); })->name('login');
+        Route::post('/login', 'login');
+    });
+    Route::middleware('auth')->group(function() {
+        Route::get('/logout', 'logout');                                    // 로그 아웃
+        Route::get('/profile', 'profile')->name('profile');           // 프로필
+        Route::post('/profile', 'update');
+        Route::post('/delete', 'delete');                                   // 회원 탈퇴
+    });
+});
 
 // 마일리지 충전
-Route::get('/payment/step1', function() {return view('payment.step1'); })->middleware('auth')->name('payment');
-Route::get('/payment/step2', [\App\Http\Controllers\PaymentController::class, 'method'])->middleware('auth');
-Route::post('/payment/credit', [\App\Http\Controllers\PaymentController::class, 'credit'])->middleware('auth');
-Route::post('/payment/phone', [\App\Http\Controllers\PaymentController::class, 'phone'])->middleware('auth');
-Route::post('/payment/voucher', [\App\Http\Controllers\PaymentController::class, 'voucher'])->middleware('auth');
+Route::controller(\App\Http\Controllers\PaymentController::class)->group(function() {
+    Route::middleware('auth')->group(function() {
+        Route::get('/payment/step1', function() {return view('payment.step1'); })->name('payment');
+        Route::get('/payment/step2', 'method');
+        Route::post('/payment/credit', 'credit');
+        Route::post('/payment/phone', 'phone');
+        Route::post('/payment/voucher', 'voucher');
+    });
+});
 
 // 마일리지 출금
-Route::get('/withdrawal', [\App\Http\Controllers\MileageController::class, 'withdrawal'])->middleware('auth')->name('withdrawal');
-Route::post('/withdrawal', [\App\Http\Controllers\MileageController::class, 'withdrawalAction'])->middleware('auth');
-// 마일리지 사용내역
-Route::get('/mileageReport', [\App\Http\Controllers\MileageController::class, 'report'])->middleware('auth')->name('mileageReport');
+Route::controller(\App\Http\Controllers\MileageController::class)->group(function() {
+    Route::middleware('auth')->group(function() {
+        Route::get('/withdrawal', 'withdrawal')->name('withdrawal');    // 마일리지 출금
+        Route::post('withdrawal', 'withdrawalAction');
+        Route::get('/mileageReport', 'report')->name('mileageReport');  // 마일리지 사용내역
+    });
+});
 
 // 거래
-Route::get('/trade', [\App\Http\Controllers\TradeController::class, 'list'])->middleware('auth')->name('trade');
-Route::get('/trade/registration', function() {return view('trade.registration'); })->middleware('auth');
-Route::post('/trade/registration', [\App\Http\Controllers\TradeController::class, 'insert'])->middleware('auth');
-Route::get('/trade/detail/{no}', [\App\Http\Controllers\TradeController::class, 'detail'])->middleware('auth');
-Route::post('/trade/detail/{no}', [\App\Http\Controllers\TradeController::class, 'trading'])->middleware('auth');
-Route::delete('/trade/detail/{no}', [\App\Http\Controllers\TradeController::class, 'delete'])->middleware('auth');
-Route::get('/trade/list', [\App\Http\Controllers\TradeController::class, 'tradeList'])->middleware('auth');
-Route::post('/trade/list', [\App\Http\Controllers\TradeController::class, 'action'])->middleware('auth');
+Route::controller(\App\Http\Controllers\TradeController::class)->group(function() {
+    Route::middleware('auth')->group(function() {
+        Route::get('/trade', 'list')->name('trade');
+        Route::get('/trade/registration', function() {return view('trade.registration'); });
+        Route::post('/trade/registration', 'insert');
+        Route::get('/trade/detail/{no}', 'detail');
+        Route::post('/trade/detail/{no}', 'trading');
+        Route::get('/trade/list', 'tradeList');
+        Route::post('/trade/list', 'action');
+    });
+});
 
 // 방명록
-Route::get('/visitors', [\App\Http\Controllers\VisitorsController::class, 'list'])->name('visitors');
-Route::post('/visitors', [\App\Http\Controllers\VisitorsController::class, 'insert']);
+Route::controller(\App\Http\Controllers\VisitorsController::class)->group(function() {
+    Route::get('visitors', 'list')->name('visitors');
+    Route::post('/visitors', 'insert');
+});
 
-// ajax 방명록
-Route::get('/ajax/visitors/list', [\App\Http\Controllers\AjaxController::class, 'visitorsList']);
-Route::post('/ajax/visitors/comment', [\App\Http\Controllers\AjaxController::class, 'visitorsComment']);
-Route::post('/ajax/visitors/delete', [\App\Http\Controllers\AjaxController::class, 'visitorsDelete']);
-Route::post('/ajax/visitors/update', [\App\Http\Controllers\AjaxController::class, 'visitorsUpdate']);
+Route::controller(\App\Http\Controllers\AjaxController::class)->group(function() {
+    Route::get('/ajax/visitors/list', 'visitorsList');
+    Route::post('/ajax/visitors/comment', 'visitorsComment');
+    Route::post('/ajax/visitors/delete', 'visitorsDelete');
+    Route::post('/ajax/visitors/update', 'visitorsUpdate');
+});
 
-Route::get('/email/{hash}', [\App\Http\Controllers\MailController::class, 'signMail']);
+// 메일
+Route::controller(\App\Http\Controllers\MailController::class)->group(function() {
+    Route::middleware('guest')->group(function() {
+        Route::get('/email/{hash}', 'signMail');
+    });
+});
+
+// 관리자
+Route::controller(\App\Http\Controllers\AdminController::class)->group(function() {
+    Route::middleware('guest')->group(function() {
+        Route::get('/admin', function() {return view('admin.home'); })->withoutMiddleware('guest')->name('admin');
+        Route::get('/admin/register', function() {return view('admin.auth.register'); });
+        Route::post('/admin/register', 'sign');
+        Route::get('/admin/login', function() {return view('admin.auth.login'); });
+        Route::post('/admin/login', 'login');
+    });
+});
+
 
 // php artisan make:controller MemberController --resource
 //Route::resource('auth', \App\Http\Controllers\MemberController::class);

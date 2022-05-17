@@ -16,14 +16,16 @@ class AjaxController extends Controller
     public function visitorsList(Request $request)
     {
         try {
-            $validator = Validator::make($request->all(), ['board_num' => ['required', 'integer'], 'page' => ['required', 'integer']]);
+            $validator = Validator::make($request->all(), [
+                'board_num' => ['required', 'integer'], 'page' => ['required', 'integer']]);
             if($validator->fails()) {
                 throw new Exception($validator->errors()->first());
             }
 
             $inputData = $validator->validated();
 
-            $listData = DB::table('tr_visitors_board')->where('parents_no', $inputData['board_num'])->where('status', 't')->orderByDesc('no')->paginate(10);
+            $listData = DB::table('tr_visitors_board')->where('parents_no', $inputData['board_num'])
+                ->where('status', 't')->orderByDesc('no')->paginate(10);
 
             $listData = (object)$listData;
             $listData = json_encode($listData);
@@ -46,7 +48,7 @@ class AjaxController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'parent_no' => ['required', 'integer'],
-                'comment' => ['required', 'integer']
+                'comment' => ['required']
             ]);
             if($validator->fails()) {
                 throw new Exception($validator->errors()->first());
@@ -54,7 +56,8 @@ class AjaxController extends Controller
             $inputData = $validator->validated();
 
             if(!Auth::check()) {
-                $passwordValidator = Validator::make($request->only('comment_password'), ['comment_password' => ['required', 'alpha_num']]);
+                $passwordValidator = Validator::make($request->only('comment_password'), [
+                    'comment_password' => ['required', 'alpha_num']]);
                 if($passwordValidator->fails()) {
                     throw new Exception($passwordValidator->errors()->first());
                 }
@@ -64,17 +67,19 @@ class AjaxController extends Controller
                             'parents_no'=>$inputData['parent_no'], 'content'=>$inputData['comment']];
             } else {
                 $userModel = Auth::user();
-                $params = ['user_type'=>'m', 'user_no'=>$userModel->no, 'user_name'=>$userModel->name, 'parents_no'=>$inputData['parent_no'], 'content'=>$inputData['comment']];
+                $params = ['user_type'=>'m', 'user_no'=>$userModel->no, 'user_name'=>$userModel->name,
+                            'parents_no'=>$inputData['parent_no'], 'content'=>$inputData['comment']];
             }
 
             DB::beginTransaction();
 
             $boardNo = DB::table('tr_visitors_board')->insertGetId($params);
             if(!$boardNo) {
-                throw new Exception('댓글 저장에 실패했습니다.');
+                throw new DatabaseException('댓글 저장에 실패했습니다.');
             }
 
             // email 발송 추가 예정
+//            (new MailController)->sendMail()
 
 
             DB::commit();
@@ -106,7 +111,8 @@ class AjaxController extends Controller
                 $validated = array_merge($validated, $passwordValidator->validated());
             }
 
-            $boardModel = DB::table('tr_visitors_board')->where('status', 't')->where('no', $validated['board_no'])->lockForUpdate()->first();
+            $boardModel = DB::table('tr_visitors_board')->where('status', 't')
+                ->where('no', $validated['board_no'])->lockForUpdate()->first();
             if(!$boardModel) {
                 throw new Exception('해당되는 게시글이 존재하지 않습니다.');
             }
@@ -122,7 +128,8 @@ class AjaxController extends Controller
 
             DB::beginTransaction();
 
-            $updateData = DB::table('tr_visitors_board')->where('status', 't')->where('no', $validated['board_no'])->update(['status' => 'f']);
+            $updateData = DB::table('tr_visitors_board')->where('status', 't')
+                ->where('no', $validated['board_no'])->update(['status' => 'f']);
             if(!$updateData) {
                 throw new DatabaseException('삭제에 실패했습니다.');
             }
@@ -163,7 +170,8 @@ class AjaxController extends Controller
 
             DB::beginTransaction();
 
-            $boardModel = DB::table('tr_visitors_board')->where('no' , $validated['board_no'])->where('status', 't')->lockForUpdate()->first();
+            $boardModel = DB::table('tr_visitors_board')->where('no' , $validated['board_no'])
+                ->where('status', 't')->lockForUpdate()->first();
             if(!$boardModel) {
                 throw new DatabaseException('게시글이 존재하지 않습니다.');
             }
@@ -178,7 +186,8 @@ class AjaxController extends Controller
                 }
             }
 
-            $updateRow = DB::table('tr_visitors_board')->where('no', $validated['board_no'])->where('status', 't')->update(['content' => $validated['text_data']]);
+            $updateRow = DB::table('tr_visitors_board')->where('no', $validated['board_no'])
+                ->where('status', 't')->update(['content' => $validated['text_data']]);
             if(!$updateRow) {
                 throw new DatabaseException('수정에 실패하였습니다.');
             }

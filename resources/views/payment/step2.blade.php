@@ -88,5 +88,15 @@
         </form>
     @endif
 </section>
+<script>
+    // function methodAction(event) {
+    //     console.log(event);
+    //     $( "form" ).on( "submit", function( event ) {
+    //         event.preventDefault();
+    //         console.log( $( this ).serialize() );
+    //     });
+    // }
+
+</script>
 
 @include('layout.footer')

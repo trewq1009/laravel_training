@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Exceptions\DatabaseException;
 use Exception;
-use phpDocumentor\Reflection\TypeResolver;
 
 class AuthController extends Controller
 {
@@ -100,8 +99,8 @@ class AuthController extends Controller
             $userData['password'] = $validated['userPw'];
 
             $userModelData = DB::table('tr_account')->where('id', $userData['id'])->first();
-            if($userModelData->id !== $userData['id']) {
-                $validator->errors()->add('userId', '아이디를 다시 확인해 주세요.');
+            if(!$userModelData) {
+                $validator->errors()->add('userId', '정보를 다시 확인해 주세요.');
                 throw new Exception();
             }
             if($userModelData->email_status == 'f') {
