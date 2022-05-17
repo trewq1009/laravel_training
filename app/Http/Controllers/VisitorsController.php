@@ -16,7 +16,8 @@ class VisitorsController extends Controller
     public function list()
     {
         try {
-            $data = DB::table('tr_visitors_board')->where('status', 't')->where('parents_no', '0')->orderByDesc('no')->paginate(10);
+            $data = DB::table('tr_visitors_board')->where('status', 't')
+                ->where('parents_no', '0')->orderByDesc('no')->paginate(10);
             $data = (object)$data;
             $data = json_encode($data);
             $data = json_decode($data);
@@ -28,7 +29,8 @@ class VisitorsController extends Controller
                 }
 
                 // 답글 수
-                $data->data[$key]->comment_count = DB::table('tr_visitors_board')->where('status', 't')->where('parents_no', $value->no)->count();
+                $data->data[$key]->comment_count = DB::table('tr_visitors_board')
+                    ->where('status', 't')->where('parents_no', $value->no)->count();
             }
 
 
