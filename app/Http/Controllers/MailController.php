@@ -32,7 +32,8 @@ class MailController extends Controller
         try {
             $no = Crypt::decryptString($hash);
 
-            $userModel = DB::table('tr_account')->where('email_status', 'f')->where('no', $no)->first();
+            $userModel = DB::table('tr_account')->where('email_status', 'f')
+                ->where('no', $no)->first();
             if(!$userModel) {
                 throw new Exception();
             }
