@@ -24,6 +24,11 @@
             @if ($errors->has('productPrice'))
                 <span class="text-danger">{{ $errors->first('productPrice') }}</span>
             @endif
+            <span class="input-group-text" id="basic-addon1">갯수</span>
+            <input type="text" class="form-control" id="productAmount" name="productAmount" value="{{old('productAmount')}}" onKeyup="this.value=this.value.replace(/[^-0-9]/g,'');" required>
+            @if ($errors->has('productAmount'))
+                <span class="text-danger">{{ $errors->first('productAmount') }}</span>
+            @endif
         </div>
         <div class="input-group mb-3">
             <span class="input-group-text" id="basic-addon1">실가격</span>

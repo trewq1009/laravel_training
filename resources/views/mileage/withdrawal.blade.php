@@ -5,14 +5,6 @@
     <form action='<?php echo htmlspecialchars('/withdrawal');?>' method="post" id="methodForm">
         @csrf
         <div class="mb-3">
-            <label for="usingMileage" class="form-label">사용중 마일리지</label>
-            <input type="text" class="form-control" value="{{$using_mileage}}" name="usingMileage" id="usingMileage" readonly required>
-        </div>
-        <div class="mb-3">
-            <label for="useMileage" class="form-label">사용 가능 마일리지</label>
-            <input type="text" class="form-control" value="{{$use_mileage}}" name="useMileage" id="useMileage" readonly required>
-        </div>
-        <div class="mb-3">
             <label for="realMileage" class="form-label">출금 가능 마일리지</label>
             <input type="text" class="form-control" value="{{$real_mileage}}" name="realMileage" id="realMileage" readonly required>
         </div>

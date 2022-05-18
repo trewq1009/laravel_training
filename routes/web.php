@@ -60,8 +60,8 @@ Route::controller(\App\Http\Controllers\TradeController::class)->group(function(
         Route::post('/trade/registration', 'insert');
         Route::get('/trade/detail/{no}', 'detail');
         Route::post('/trade/detail/{no}', 'trading');
-        Route::get('/trade/list', 'tradeList');
-        Route::post('/trade/list', 'action');
+        Route::get('/trade/list/{method}', 'tradeList');
+        Route::post('/trade/list/cancel', 'cancel');
     });
 });
 
@@ -76,6 +76,11 @@ Route::controller(\App\Http\Controllers\AjaxController::class)->group(function()
     Route::post('/ajax/visitors/comment', 'visitorsComment');
     Route::post('/ajax/visitors/delete', 'visitorsDelete');
     Route::post('/ajax/visitors/update', 'visitorsUpdate');
+
+    Route::middleware('auth')->group(function() {
+        Route::post('/ajax/payment', 'payment');
+        Route::post('/ajax/payment/result', 'paymentInsert');
+    });
 });
 
 // 메일

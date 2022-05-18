@@ -202,4 +202,145 @@ class AjaxController extends Controller
             return json_encode(['status'=>'fail', 'message'=>$e->getMessage()]);
         }
     }
+
+    public function payment(Request $request)
+    {
+        try {
+            $radioValidator = Validator::make($request->all(), [
+                'radioValue' => ['required', 'alpha']
+            ]);
+
+            if($radioValidator->fails()) {
+                throw new Exception('잘못된 형식의 요청입니다.');
+            }
+            $radioValidated = $radioValidator->validated();
+
+            if($radioValidated['radioValue'] === 'credit') {
+                $params = ['price' => ['required', 'integer'],
+                            'cardNumber' => ['required', 'size:4'],
+                            'cardMonth' => ['required', 'integer'],
+                            'cardYear' => ['required', 'integer'],
+                            'cardCVC' => ['required', 'integer'],
+                            'cardPassword' => ['required', 'integer']];
+            } else if($radioValidated['radioValue'] === 'phone') {
+                $params = [];
+            } else if($radioValidated['radioValue'] === 'voucher') {
+                $params = [];
+            } else {
+                throw new Exception('잘못된 형식의 요청 입니다');
+            }
+
+            $validator = Validator::make($request->all(), $params);
+            if($validator->fails()) {
+                throw new Exception($validator->errors()->first());
+            }
+            $validated = $validator->validated();
+
+            if($validated['price'] < 1000) {
+                throw new Exception('최소 충전 금액은 1000원 이상 입니다.');
+            }
+            if($validated['price'] > 9999900) {
+                throw new Exception('최대 충전 금액은 9999900원 입니다.');
+            }
+            if($validated['cardMonth'] > 12 || $validated['cardMonth'] < 1 ) {
+                throw new Exception('올바른 유효 월 이 아닙니다.');
+            }
+            $cardDate = date("Y-m-d H:i:s", mktime(0, 0, 0, $validated['cardMonth'] + 1, 0, $validated['cardYear']));
+            $toDate = date("Y-m-d H:i:s");
+            if($toDate > $cardDate) {
+                throw new Exception('카드 유효기간이 지났습니다.');
+            }
+            $validated['cardDate'] = Crypt::encryptString($cardDate);
+            unset($validated['cardMonth']);
+            unset($validated['cardYear']);
+            if(strlen($validated['cardCVC']) !== 3) {
+                throw new Exception('보안 코드가 알맞지 않습니다.');
+            }
+            $validated['cardCVC'] = Crypt::encryptString($validated['cardCVC']);
+            if(strlen($validated['cardPassword']) !== 4) {
+                throw new Exception('카드 패스워드 길이가 알맞지 않습니다.');
+            }
+            $validated['cardPassword'] = Crypt::encryptString($validated['cardPassword']);
+            foreach ($validated['cardNumber'] as $key => $item) {
+                if(strlen($item) !== 4) {
+                    throw new Exception('카드 번호길이가 알맞지 않습니다.');
+                }
+                if (!preg_match("/^[0-9]/i", $item)) {
+                    throw new Exception('숫자만 입력해 주세요');
+                }
+                $validated['cardNumber'][$key] = Crypt::encryptString($item);
+            }
+
+            return json_encode([
+                'status'=>'success', 'message'=>'충전에 성공하였습니다.',
+                'data'=>$validated, 'method'=>$radioValidated['radioValue']
+            ]);
+
+        } catch (Exception $e) {
+            return json_encode([
+                'status' => 'fail', 'message'=>$e->getMessage(),
+                'data'=>['error'=>0, 'price'=> $validated['price'] ?? 0],
+                'method' => $radioValidated['radioValue'] ?? null]
+            );
+        }
+    }
+
+    public function paymentInsert(Request $request)
+    {
+        try {
+            if($request->all()['status'] === 'success') {
+                $params = [
+                    'user_no' => Auth::user()->no, 'method' => $request->all()['method'],
+                    'payment_mileage' => $request->all()['data']['price'], 'payment_information' => json_encode($request->all()['data'])
+                ];
+            } else {
+                $params = [
+                    'user_no' => Auth::user()->no, 'method' => $request->all()['method'],
+                    'payment_mileage' => $request->all()['data']['price'], 'status' => 'f',
+                    'cancels' => json_encode(['message' => $request->all()['message'], 'data' => $request->all()['data']])
+                ];
+            }
+
+            DB::beginTransaction();
+
+            $paymentLogNo = DB::table('tr_payment_log')->insertGetId($params);
+            if(!$paymentLogNo) {
+                throw new DatabaseException('결제 로그 등록 실패');
+            }
+
+            if($request->all()['status'] !== 'success') {
+                return json_encode(['status'=>'fail', 'message' => '로그저장 성공']);
+                die();
+            }
+
+            $userMileageModel = DB::table('tr_mileage')
+                ->where('user_no', Auth::user()->no)->lockForUpdate()->first();
+
+            $mileageLogNo = DB::table('tr_mileage_log')->insertGetId([
+                'user_no' => Auth::user()->no, 'method' => 'payment', 'real_plus' => $request->all()['data']['price']
+            ]);
+            if(!$mileageLogNo) {
+                throw new DatabaseException('로그 저장 실패');
+            }
+
+            $mileageUpdateRow = DB::table('tr_mileage')->where('user_no', Auth::user()->no)->update([
+                'real_mileage' => $userMileageModel->real_mileage + $request->all()['data']['price'],
+                'update_date' => date('Y-m-d H:i:s')
+            ]);
+            if(!$mileageUpdateRow) {
+                throw new DatabaseException('마일리지 적용 실패');
+            }
+
+
+            DB::commit();
+            return json_encode(['status' => 'success', 'message' => '충전에 성공 하였습니다.']);
+
+        } catch (DatabaseException $e) {
+            DB::rollBack();
+            return json_encode(['status' => 'fail', 'message' => $e->getMessage()]);
+        } catch (Exception $e) {
+            return json_encode(['status' => 'fail', 'message' => $e->getMessage().$e->getLine()]);
+        }
+    }
+
 }

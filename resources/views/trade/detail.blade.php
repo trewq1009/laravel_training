@@ -24,6 +24,16 @@
         <div class="input-group mb-3">
             <span class="input-group-text" id="basic-addon1">가격</span>
             <p class="form-control" style="margin: 0">{{$board->price}}</p>
+            <span class="input-group-text" id="basic-addon1">갯수</span>
+            <p class="form-control" style="margin: 0">{{$board->amount}}</p>
+        </div>
+
+        <div class="input-group mb-3">
+            <span class="input-group-text" id="basic-addon1">구매 갯수</span>
+            <input type="text" class="form-control" value="1" name="tradeAmount" onKeyup="this.value=this.value.replace(/[^-0-9]/g,'');" style="margin: 0">
+            @if ($errors->has('tradeAmount'))
+                <span class="text-danger">{{ $errors->first('tradeAmount') }}</span>
+            @endif
         </div>
 
         <div class="input-group">

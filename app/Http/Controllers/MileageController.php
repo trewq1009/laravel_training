@@ -18,8 +18,6 @@ class MileageController extends Controller
             $userData = DB::table('tr_mileage')->where('user_no', Auth::user()->no)->first();
 
             $viewData = [
-                'using_mileage' => $userData->using_mileage,
-                'use_mileage' => $userData->use_mileage,
                 'real_mileage' => $userData->real_mileage
             ];
 

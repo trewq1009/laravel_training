@@ -42,8 +42,8 @@
             <input type="text" class="form-control" value="{{$using_mileage}}" name="userUsingMileage" id="userMileage" readonly required>
         </div>
         <div class="mb-3">
-            <label for="userUseMileage" class="form-label">Use Mileage</label>
-            <input type="text" class="form-control" value="{{$use_mileage}}" name="userUseMileage" id="userUseMileage" readonly required>
+            <label for="userUseMileage" class="form-label">Event Mileage</label>
+            <input type="text" class="form-control" value="{{$event_mileage}}" name="userUseMileage" id="userUseMileage" readonly required>
         </div>
         <div class="mb-3">
             <label for="userRealMileage" class="form-label">Withdrawal Mileage</label>

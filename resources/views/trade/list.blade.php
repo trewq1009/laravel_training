@@ -4,7 +4,8 @@
 <section class="container">
     <div style="margin: 1rem 0">
         <a class="btn btn-outline-primary" href="/trade/registration">거래등록</a>
-        <a class="btn btn-outline-info" href="/trade/list">거래내역</a>
+        <a class="btn btn-outline-info" href="/trade/list/buy">구매내역</a>
+        <a class="btn btn-outline-info" href="/trade/list/sell">판매내역</a>
     </div>
 
     <div class="list-group">

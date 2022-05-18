@@ -159,7 +159,7 @@ class AuthController extends Controller
                 'name' => Crypt::decryptString($userData->name),
                 'email' => Crypt::decryptString($userData->email),
                 'using_mileage' => $userMileageData->using_mileage,
-                'use_mileage' => $userMileageData->use_mileage,
+                'event_mileage' => $userMileageData->event_mileage,
                 'withdrawal_mileage' => $userMileageData->real_mileage
             ];
 
