@@ -361,7 +361,7 @@ class TradeController extends Controller
             }
 
             $buyerMileageLogModel = DB::table('tr_mileage_log')->where('user_no', $tradeModel->buyer_no)
-                ->where('method', 'trade')->where('method_no', $tradeModel->trade_board_no)->get();
+                ->where('method', 'trade')->where('method_no', $tradeModel->no)->get();
             if(!$buyerMileageLogModel) {
                 $validator->errors()->add('tradeNo', '로그 에러');
                 throw new DatabaseException();
@@ -407,11 +407,12 @@ class TradeController extends Controller
         }
     }
 
-    public function action(Request $request)
+    public function success(Request $request)
     {
         try {
             $validator = Validator::make($request->all(), [
-                'tradeNo' => ['required', 'integer']
+                'tradeNo' => ['required', 'integer'],
+                'tradeName' => ['required', 'alpha']
             ]);
             if($validator->fails()) {
                 throw new Exception();
@@ -419,84 +420,83 @@ class TradeController extends Controller
             $validated = $validator->validated();
 
             DB::beginTransaction();
-            $flag = false;
-            $tradeLog = DB::table('tr_trade_log')->where('no', $validated['tradeNo'])->lockForUpdate()->first();
-            if($tradeLog->seller_no === Auth::user()->no) {
-                // 판매
+
+            $tradeModel = DB::table('tr_trade')->where('no', $validated['tradeNo'])->lockForUpdate()->first();
+            if(!$tradeModel) {
+                $validator->errors()->add('tradeNo', '잘못된 게시글 입니다.');
+                throw new DatabaseException();
+            }
+
+            if($validated['tradeName'] === '판매') {
+                if($tradeModel->status !== 'a1') {
+                    $validator->errors()->add('tradeNo', '상태값 에러');
+                    throw new DatabaseException();
+                }
                 $params = [
-                    'seller_trade_status' => 't', 'seller_status_date' => date('Y-m-d H:i:s'),
+                    'status' => 'a2', 'seller_status_date' => date('Y-m-d H:i:s'),
                     'update_date' => date('Y-m-d H:i:s')
                 ];
-                if($tradeLog->buyer_trade_status === 't') {
-                    $params = array_merge($params, ['status' => 't', 'trade_success_date' => date('Y-m-d H:i:s')]);
-                    $flag = true;
-                }
             } else {
-                // 구매
-                $params = [
-                    'buyer_trade_status' => 't', 'buyer_status_date' => date('Y-m-d H:i:s'),
-                    'update_date' => date('Y-m-d H:i:s')
-                ];
-                if($tradeLog->seller_trade_status === 't') {
-                    $params = array_merge($params, ['status' => 't', 'trade_success_date' => date('Y-m-d H:i:s')]);
-                    $flag = true;
+                if($tradeModel->status !== 'a2') {
+                    $validator->errors()->add('tradeNo', '상태값 에러');
+                    throw new DatabaseException();
                 }
+                $params = [
+                    'status' => 't1', 'success_date' => date('Y-m-d H:i:s'),
+                    'buyer_status_date' => date('Y-m-d H:i:s'), 'update_date' => date('Y-m-d H:i:s')
+                ];
             }
 
-            $updateLog = DB::table('tr_trade_log')->where('no', $validated['tradeNo'])->update($params);
-            if(!$updateLog) {
-                $validator->errors()->add('tradeNo', '로그 저장에 실패했습니다.');
+            $tradeUpdateRow = DB::table('tr_trade')->where('no', $validated['tradeNo'])->update($params);
+            if(!$tradeUpdateRow) {
+                $validator->errors()->add('tradeNo', '거래상태 변경에 실패하였습니다.');
                 throw new DatabaseException();
             }
 
-            if(!$flag) {
+            if($validated['tradeName'] === '판매') {
                 DB::commit();
-                return redirect('/trade/list');
-                die();
+                return redirect('/trade/list/sell');
             }
 
-            // 판매자 마일리지 로직
-            $sellerModel = DB::table('tr_mileage')->where('user_no', $tradeLog->seller_no)->lockForUpdate()->first();
-            $commissionMileage = $tradeLog->trade_price * 0.05;
-            $sellerCalcMileage = ceil($tradeLog->trade_price - $commissionMileage);
-
-            $sellerUpdateLog = DB::table('tr_mileage_log')->insertGetId([
-                'user_no' => $sellerModel->user_no,
-                'method' => 'trade',
-                'method_no' => $tradeLog->no,
-                'before_mileage' => $sellerModel->use_mileage,
-                'use_mileage' => $sellerCalcMileage,
-                'after_mileage' => $sellerModel->use_mileage + $sellerCalcMileage
-            ]);
-            if(!$sellerUpdateLog) {
-                $validator->errors()->add('tradeNo', '작업에 실패하였습니다.');
+            $buyerMileageModel = DB::table('tr_mileage')->where('user_no', $tradeModel->buyer_no)->lockForUpdate()->first();
+            if(!$buyerMileageModel) {
+                $validator->errors()->add('tradeNo', '마일리지 불러오기 오류');
+                throw new DatabaseException();
+            }
+            if($buyerMileageModel->using_mileage < $tradeModel->trade_price) {
+                $validator->errors()->add('tradeNo', '잘못된 데이터 입니다.');
                 throw new DatabaseException();
             }
 
-            $sellerMileageUpdateRow = DB::table('tr_mileage')->where('user_no', $sellerModel->user_no)->update([
-                'use_mileage' => $sellerModel->use_mileage + $sellerCalcMileage,
-                'real_mileage' => $sellerModel->real_mileage + $sellerCalcMileage,
+            $buyerMileageUpdateRow = DB::table('tr_mileage')->where('user_no', $tradeModel->buyer_no)->update([
+                'using_mileage' => $buyerMileageModel->using_mileage - $tradeModel->trade_price,
                 'update_date' => date('Y-m-d H:i:s')
             ]);
-            if(!$sellerMileageUpdateRow) {
-                $validator->errors()->add('tradeNo', '작업에 실패하였습니다.');
+            if(!$buyerMileageUpdateRow) {
+                $validator->errors()->add('tradeNo', '마일리지 업데이트에 실패하였습니다.');
                 throw new DatabaseException();
             }
 
-            // 구매자 작업
-            $buyerModel = DB::table('tr_mileage')->where('user_no', $tradeLog->buyer_no)->lockForUpdate()->first();
-
-            $buyerUpdateRow = DB::table('tr_mileage')->where('user_no', $tradeLog->buyer_no)->update([
-                'using_mileage' => $buyerModel->using_mileage - $tradeLog->trade_price,
-                'update_date' => date('Y-m-d H:i:s')
+            $buyerMileageLogNo = DB::table('tr_mileage_log')->insertGetId([
+                'user_no' => $tradeModel->buyer_no, 'method' => 'trade', 'method_no' => $tradeModel->no,
+                'using_minus' => $tradeModel->trade_price
             ]);
-            if(!$buyerUpdateRow) {
-                $validator->errors()->add('tradeNo', '작업에 실패하였습니다.');
+            if(!$buyerMileageLogNo) {
+                $validator->errors()->add('tradeNo', '로그 등록에 실패하였습니다.');
                 throw new DatabaseException();
             }
+
+            // 판매자 처리 영역
+
+
+
+
+
+
+
 
             DB::commit();
-            return redirect('/trade/list');
+            return redirect('/trade/list/buy');
 
         } catch (DatabaseException $e) {
             DB::rollBack();

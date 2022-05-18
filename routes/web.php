@@ -62,6 +62,7 @@ Route::controller(\App\Http\Controllers\TradeController::class)->group(function(
         Route::post('/trade/detail/{no}', 'trading');
         Route::get('/trade/list/{method}', 'tradeList');
         Route::post('/trade/list/cancel', 'cancel');
+        Route::post('/trade/list/success', 'success');
     });
 });
 

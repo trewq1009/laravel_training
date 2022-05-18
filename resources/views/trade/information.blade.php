@@ -2,7 +2,7 @@
 @include('layout.header')
 
 <section class="container">
-    <form action='<?php echo htmlspecialchars('/trade/list');?>' method="post" id="formAction">
+    <form action='<?php echo htmlspecialchars('/trade/list/success');?>' method="post" id="formAction">
         @csrf
         @if ($errors->has('tradeNo'))
             <span class="text-danger">{{ $errors->first('tradeNo') }}</span>
@@ -34,6 +34,13 @@
                         @if($item->status === 'a1' || $item->status === 'a2')
                             <button type="button" onclick="tradeCancel(this)" value="{{$item->no}}" data-trade="{{$item->trade_name}}" name="tradeNo" class="btn btn-outline-info">거래 취소</button>
                         @endif
+                    @elseif($item->trade_name === '판매')
+                        @if($item->status === 'a1')
+                            <button type="button" onclick="tradeSuccess(this)" value="{{$item->no}}" data-trade="{{$item->trade_name}}" name="tradeNo" class="btn btn-outline-info">눌러서 거래확정</button>
+                        @endif
+                        @if($item->status === 'a1' || $item->status === 'a2')
+                            <button type="button" onclick="tradeCancel(this)" value="{{$item->no}}" data-trade="{{$item->trade_name}}" name="tradeNo" class="btn btn-outline-info">거래 취소</button>
+                        @endif
                     @endif
                 </td>
             </tr>
@@ -51,6 +58,7 @@
         const resultConfirm = window.confirm(tradeName + '를 완료 하시겠습니까?');
         if(!resultConfirm) return;
         document.querySelector('#tradeNo').value = event.value;
+        document.querySelector('#tradeName').value = event.dataset.trade;
         document.querySelector('#formAction').submit();
     }
 
