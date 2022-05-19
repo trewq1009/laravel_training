@@ -60,6 +60,7 @@ Route::controller(\App\Http\Controllers\TradeController::class)->group(function(
         Route::post('/trade/registration', 'insert');
         Route::get('/trade/detail/{no}', 'detail');
         Route::post('/trade/detail/{no}', 'trading');
+        Route::delete('/trade/detail/{no}', 'delete');
         Route::get('/trade/list/{method}', 'tradeList');
         Route::post('/trade/list/cancel', 'cancel');
         Route::post('/trade/list/success', 'success');
