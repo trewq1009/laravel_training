@@ -15,7 +15,8 @@
                 <th scope="col">TRADE 종류</th>
                 <th scope="col">상품명</th>
                 <th scope="col">가격</th>
-                <th scope="col">현재 거래 상태</th>
+                <th scope="col">상대 상태</th>
+                <th scope="col">본인 상태</th>
                 <th scope="col">#</th>
             </tr>
             </thead>
@@ -25,22 +26,14 @@
                 <td>{{$item->trade_name}}</td>
                 <td>{{$item->product_name}}</td>
                 <td>{{$item->trade_price}}</td>
-                <td>{{$item->status_kr}}</td>
+                <td>{{$item->other_status_kr}}</td>
+                <td>{{$item->user_status_kr}}</td>
                 <td>
-                    @if($item->trade_name === '구매')
-                        @if($item->status === 'a2')
-                        <button type="button" onclick="tradeSuccess(this)" value="{{$item->no}}" data-trade="{{$item->trade_name}}" name="tradeNo" class="btn btn-outline-info">눌러서 거래확정</button>
-                        @endif
-                        @if($item->status === 'a1' || $item->status === 'a2')
-                            <button type="button" onclick="tradeCancel(this)" value="{{$item->no}}" data-trade="{{$item->trade_name}}" name="tradeNo" class="btn btn-outline-info">거래 취소</button>
-                        @endif
-                    @elseif($item->trade_name === '판매')
-                        @if($item->status === 'a1')
-                            <button type="button" onclick="tradeSuccess(this)" value="{{$item->no}}" data-trade="{{$item->trade_name}}" name="tradeNo" class="btn btn-outline-info">눌러서 거래확정</button>
-                        @endif
-                        @if($item->status === 'a1' || $item->status === 'a2')
-                            <button type="button" onclick="tradeCancel(this)" value="{{$item->no}}" data-trade="{{$item->trade_name}}" name="tradeNo" class="btn btn-outline-info">거래 취소</button>
-                        @endif
+                    @if($item->user_status === 'a' && $item->other_status !== 'f')
+                    <button type="button" onclick="tradeSuccess(this)" value="{{$item->no}}" data-trade="{{$item->trade_name}}" name="tradeNo" class="btn btn-outline-info">눌러서 거래확정</button>
+                    @endif
+                    @if($item->user_status === 'a' && $item->other_status !== 'f')
+                    <button type="button" onclick="tradeCancel(this)" value="{{$item->no}}" data-trade="{{$item->trade_name}}" name="tradeNo" class="btn btn-outline-info">거래 취소</button>
                     @endif
                 </td>
             </tr>
