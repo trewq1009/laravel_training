@@ -72,6 +72,12 @@ class AuthController extends Controller
                 throw new DatabaseException();
             }
 
+            $mileageDetailNo = DB::table('tr_mileage_detail')->insertGetId(['user_no' => $userNo]);
+            if(!$mileageDetailNo) {
+                $validator->errors()->add('field', '회원 마일리지 생성에 실패했습니다.');
+                throw new DatabaseException();
+            }
+
             // 인증 이메일 발송 구역
             (new MailController)->sendMail($validated['userEmail'], Crypt::encryptString($userNo));
 
@@ -158,9 +164,8 @@ class AuthController extends Controller
                 'id' => $userData->id,
                 'name' => Crypt::decryptString($userData->name),
                 'email' => Crypt::decryptString($userData->email),
-                'using_mileage' => $userMileageData->using_mileage,
-                'event_mileage' => $userMileageData->event_mileage,
-                'withdrawal_mileage' => $userMileageData->real_mileage
+                'mileage' => $userMileageData->mileage,
+                'using_mileage' => $userMileageData->using_mileage
             ];
 
             return view('auth.profile', $data);

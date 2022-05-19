@@ -69,7 +69,7 @@
                     <input class="form-check-input" type="radio" value="thrifty" name="agencyValue" id="flexRadioDefault4" required>
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary">Submit</button>
+            <button type="button" class="btn btn-primary">Submit</button>
         </form>
     @elseif($radioValue == 'voucher')
         @csrf
@@ -84,7 +84,7 @@
                     <input type="text" class="form-control" value="" name="voucherNumber" id="voucherNumber" required>
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary">Submit</button>
+            <button type="button" class="btn btn-primary">Submit</button>
         </form>
     @endif
 </section>
@@ -117,7 +117,6 @@
                         },
                         success: result => {
                             const inner_data = JSON.parse(result);
-                            // window.alert(inner_data.message);
                             window.location.href = '/';
                         }, error: e => {
                             console.log(e);

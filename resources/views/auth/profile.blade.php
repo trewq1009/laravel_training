@@ -38,16 +38,12 @@
             <input type="email" class="form-control" value="{{$email}}" name="userEmail" id="userEmail" readonly required>
         </div>
         <div class="mb-3">
-            <label for="userMileage" class="form-label">Using Mileage</label>
-            <input type="text" class="form-control" value="{{$using_mileage}}" name="userUsingMileage" id="userMileage" readonly required>
+            <label for="userMileage" class="form-label">Mileage</label>
+            <input type="text" class="form-control" value="{{$mileage}}" name="userUsingMileage" id="userMileage" readonly required>
         </div>
         <div class="mb-3">
-            <label for="userUseMileage" class="form-label">Event Mileage</label>
-            <input type="text" class="form-control" value="{{$event_mileage}}" name="userUseMileage" id="userUseMileage" readonly required>
-        </div>
-        <div class="mb-3">
-            <label for="userRealMileage" class="form-label">Withdrawal Mileage</label>
-            <input type="text" class="form-control" value="{{$withdrawal_mileage}}" name="userRealMileage" id="userRealMileage" readonly required>
+            <label for="userUseMileage" class="form-label">Using Mileage</label>
+            <input type="text" class="form-control" value="{{$using_mileage}}" name="userUseMileage" id="userUseMileage" readonly required>
         </div>
         <div style="display: flex; align-items: center; justify-content: space-between">
             <div>

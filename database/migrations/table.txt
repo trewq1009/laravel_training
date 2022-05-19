@@ -30,9 +30,8 @@ CREATE TABLE tr_mileage
 (
     `no`                 BIGINT       NOT NULL    AUTO_INCREMENT COMMENT 'AI Index',
     `user_no`            BIGINT       NOT NULL    DEFAULT 0 COMMENT '유저 PK',
+    `mileage`            INT          NOT NULL    DEFAULT 0 COMMENT '총 마일리지',
     `using_mileage`      INT          NOT NULL    DEFAULT 0 COMMENT '사용중 마일리지',
-    `event_mileage`      INT          NOT NULL    DEFAULT 0 COMMENT '사용만 가능 마일리지(이벤트성 마일리지) : 출금 불가능',
-    `real_mileage`       INT          NOT NULL    DEFAULT 0 COMMENT '출금 가능 마일리지(충전&거래 한 마일리지)',
     `registration_date`  TIMESTAMP    NOT NULL    DEFAULT current_timestamp COMMENT '생성 날짜',
     `update_date`        TIMESTAMP    NOT NULL    DEFAULT current_timestamp COMMENT '업데이트 날짜',
      PRIMARY KEY (no)
@@ -51,8 +50,8 @@ ALTER TABLE tr_mileage
         REFERENCES tr_account (no) ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 
--- tr_withdrawal_log Table Create SQL
-CREATE TABLE tr_withdrawal_log
+-- tr_withdrawal Table Create SQL
+CREATE TABLE tr_withdrawal
 (
     `no`                   BIGINT          NOT NULL    AUTO_INCREMENT COMMENT 'AI Index',
     `user_no`              BIGINT          NOT NULL    DEFAULT 0 COMMENT '유저 PK',
@@ -65,13 +64,13 @@ CREATE TABLE tr_withdrawal_log
      PRIMARY KEY (no)
 );
 
-ALTER TABLE tr_withdrawal_log COMMENT '마일리지 출금 로그';
+ALTER TABLE tr_withdrawal COMMENT '마일리지 출금 테이블';
 
 CREATE INDEX IX_tr_withdrawal_log_1
-    ON tr_withdrawal_log(user_no, status);
+    ON tr_withdrawal(user_no, status);
 
-ALTER TABLE tr_withdrawal_log
-    ADD CONSTRAINT FK_tr_withdrawal_log_user_no_tr_account_no FOREIGN KEY (user_no)
+ALTER TABLE tr_withdrawal
+    ADD CONSTRAINT FK_tr_withdrawal_user_no_tr_account_no FOREIGN KEY (user_no)
         REFERENCES tr_account (no) ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 
@@ -102,17 +101,16 @@ ALTER TABLE tr_payment_log
 -- tr_mileage_log Table Create SQL
 CREATE TABLE tr_mileage_log
 (
-    `no`                 BIGINT         NOT NULL    AUTO_INCREMENT COMMENT 'AI Index',
-    `user_no`            BIGINT         NOT NULL    DEFAULT 0 COMMENT '유저 PK',
-    `method`             VARCHAR(12)    NOT NULL    DEFAULT '' COMMENT '행동(withdrawal:출금, payment:충전, trade:거래, trad_cancel, join:가입)',
-    `method_no`          BIGINT         NOT NULL    DEFAULT 0 COMMENT '관련 테이블 PK',
-    `using_plus`         INT            NOT NULL    DEFAULT 0 COMMENT '사용중 마일리지 증가값',
-    `using_minus`        INT            NOT NULL    DEFAULT 0 COMMENT '사용중 마일리지 감소값',
-    `event_plus`         INT            NOT NULL    DEFAULT 0 COMMENT '이벤트 마일리지 증가값',
-    `event_minus`        INT            NOT NULL    DEFAULT 0 COMMENT '이벤트 마일리지 감소값',
-    `real_plus`          INT            NOT NULL    DEFAULT 0 COMMENT '출금 마일리지 증가값',
-    `real_minus`         INT            NOT NULL    DEFAULT 0 COMMENT '출금 마일리지 감소값',
-    `registration_date`  TIMESTAMP      NOT NULL    DEFAULT current_timestamp COMMENT '변동 일자',
+    `no`                   BIGINT         NOT NULL    AUTO_INCREMENT COMMENT 'AI Index',
+    `user_no`              BIGINT         NOT NULL    DEFAULT 0 COMMENT '유저 PK',
+    `method`               VARCHAR(12)    NOT NULL    DEFAULT '' COMMENT '행동(withdrawal:출금, payment:충전, trade:거래, trad_cancel, join:가입)',
+    `method_no`            BIGINT         NOT NULL    DEFAULT 0 COMMENT '관련 테이블 PK',
+    `before_mileage`       INT            NOT NULL    DEFAULT 0 COMMENT '이전 마일리지',
+    `use_mileage`            INT            NOT NULL    DEFAULT 0 COMMENT '사용 마일리지',
+    `after_mileage`        INT            NOT NULL    DEFAULT 0 COMMENT '변동 후 마일리지',
+    `real_mileage_usage`   INT            NOT NULL    DEFAULT 0 COMMENT '일반 마일리지 사용량',
+    `event_mileage_usage`  INT            NOT NULL    DEFAULT 0 COMMENT '이벤트 마일리지 사용량',
+    `registration_date`    TIMESTAMP      NOT NULL    DEFAULT current_timestamp COMMENT '변동 일자',
      PRIMARY KEY (no)
 );
 
@@ -175,12 +173,13 @@ CREATE UNIQUE INDEX UQ_tr_image_1
 CREATE TABLE tr_trade
 (
     `no`                  BIGINT       NOT NULL    AUTO_INCREMENT COMMENT 'AI Index',
-    `trade_board_no`      BIGINT       NOT NULL    DEFAULT 0 COMMENT '상품 PK',
+    `product_no`          BIGINT       NOT NULL    DEFAULT 0 COMMENT '상품 PK',
     `seller_no`           BIGINT       NOT NULL    DEFAULT 0 COMMENT '판매자 PK',
     `buyer_no`            BIGINT       NOT NULL    DEFAULT 0 COMMENT '구매자 PK',
     `trade_price`         INT          NOT NULL    DEFAULT 0 COMMENT '거래 가격',
     `trade_amount`        TINYINT      NOT NULL    DEFAULT 0 COMMENT '상품 갯수',
-    `status`              CHAR(2)      NOT NULL    DEFAULT 'a1' COMMENT '거래 상태(a1: 거래 최초 상태, a2: 판매자 거래 확정, t1: 거래 확정, f1:판매자 거래 취소, f2: 구매자 거래 취소)',
+    `seller_status`       CHAR(1)      NOT NULL    DEFAULT 'a' COMMENT '거래 상태(a: 거래중, f:거래취소, t:거래완료)',
+    `buyer_status`        CHAR(1)      NOT NULL    DEFAULT 'a' COMMENT '거래 상태(a: 거래중, f:거래취소, t:거래완료)',
     `success_date`        TIMESTAMP    NOT NULL    DEFAULT 0 COMMENT '거래 확정 일자',
     `cancel_date`         TIMESTAMP    NOT NULL    DEFAULT 0 COMMENT '거래 취소 일자',
     `seller_status_date`  TIMESTAMP    NOT NULL    DEFAULT 0 COMMENT '판매자 상태 변동 일자',
@@ -192,11 +191,11 @@ CREATE TABLE tr_trade
 
 ALTER TABLE tr_trade COMMENT '거래 테이블';
 
+CREATE INDEX IX_tr_trad_log_1
+    ON tr_trade(product_no);
+
 CREATE INDEX IX_tr_trad_log_2
     ON tr_trade(seller_no, buyer_no);
-
-CREATE INDEX IX_tr_trad_log_1
-    ON tr_trade(trade_board_no);
 
 ALTER TABLE tr_trade
     ADD CONSTRAINT FK_tr_trade_seller_no_tr_account_no FOREIGN KEY (seller_no)
@@ -260,3 +259,20 @@ CREATE INDEX IX_tr_visitors_board_1
     ON tr_visitors_board(status);
 
 
+-- tr_mileage_detail Table Create SQL
+CREATE TABLE tr_mileage_detail
+(
+    `no`                 BIGINT       NOT NULL    AUTO_INCREMENT COMMENT 'AI Index',
+    `user_no`            BIGINT       NOT NULL    DEFAULT 0 COMMENT '유저 PK',
+    `real_mileage`       INT          NOT NULL    DEFAULT 0 COMMENT '일반 마일리지',
+    `event_mileage`      INT          NOT NULL    DEFAULT 0 COMMENT '이벤트 마일리지',
+    `registration_date`  TIMESTAMP    NOT NULL    DEFAULT current_timestamp COMMENT '생성 날짜',
+    `update_date`        TIMESTAMP    NOT NULL    DEFAULT current_timestamp COMMENT '업데이트 날짜',
+     PRIMARY KEY (no)
+);
+
+ALTER TABLE tr_mileage_detail COMMENT '유저 마일리지 상세 테이블';
+
+ALTER TABLE tr_mileage_detail
+    ADD CONSTRAINT FK_tr_mileage_detail_user_no_tr_account_no FOREIGN KEY (user_no)
+        REFERENCES tr_account (no) ON DELETE RESTRICT ON UPDATE RESTRICT;

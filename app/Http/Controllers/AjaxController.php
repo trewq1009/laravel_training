@@ -288,16 +288,17 @@ class AjaxController extends Controller
     public function paymentInsert(Request $request)
     {
         try {
-            if($request->all()['status'] === 'success') {
+            $requestData = $request->all();
+            if($requestData['status'] === 'success') {
                 $params = [
-                    'user_no' => Auth::user()->no, 'method' => $request->all()['method'],
-                    'payment_mileage' => $request->all()['data']['price'], 'payment_information' => json_encode($request->all()['data'])
+                    'user_no' => Auth::user()->no, 'method' => $requestData['method'],
+                    'payment_mileage' => $requestData['data']['price'], 'payment_information' => json_encode($requestData['data'])
                 ];
             } else {
                 $params = [
-                    'user_no' => Auth::user()->no, 'method' => $request->all()['method'],
-                    'payment_mileage' => $request->all()['data']['price'], 'status' => 'f',
-                    'cancels' => json_encode(['message' => $request->all()['message'], 'data' => $request->all()['data']])
+                    'user_no' => Auth::user()->no, 'method' => $requestData['method'],
+                    'payment_mileage' => $requestData['data']['price'], 'status' => 'f',
+                    'cancels' => json_encode(['message' => $requestData['message'], 'data' => $requestData['data']])
                 ];
             }
 
@@ -308,7 +309,7 @@ class AjaxController extends Controller
                 throw new DatabaseException('결제 로그 등록 실패');
             }
 
-            if($request->all()['status'] !== 'success') {
+            if($requestData['status'] !== 'success') {
                 return json_encode(['status'=>'fail', 'message' => '로그저장 성공']);
                 die();
             }
@@ -316,21 +317,41 @@ class AjaxController extends Controller
             $userMileageModel = DB::table('tr_mileage')
                 ->where('user_no', Auth::user()->no)->lockForUpdate()->first();
 
+            $calcMileage = $userMileageModel->mileage + $requestData['data']['price'];
+
             $mileageLogNo = DB::table('tr_mileage_log')->insertGetId([
-                'user_no' => Auth::user()->no, 'method' => 'payment', 'real_plus' => $request->all()['data']['price']
+                'user_no' => Auth::user()->no, 'method' => 'payment', 'method_no' => $paymentLogNo,
+                'before_mileage' => $userMileageModel->mileage, 'use_mileage' => $requestData['data']['price'],
+                'after_mileage' => $calcMileage
             ]);
             if(!$mileageLogNo) {
                 throw new DatabaseException('로그 저장 실패');
             }
 
             $mileageUpdateRow = DB::table('tr_mileage')->where('user_no', Auth::user()->no)->update([
-                'real_mileage' => $userMileageModel->real_mileage + $request->all()['data']['price'],
+                'mileage' => $userMileageModel->mileage + $requestData['data']['price'],
                 'update_date' => date('Y-m-d H:i:s')
             ]);
             if(!$mileageUpdateRow) {
                 throw new DatabaseException('마일리지 적용 실패');
             }
 
+            $userDetailMileageModel = DB::table('tr_mileage_detail')
+                ->where('user_no', Auth::user()->no)->lockForUpdate()->first();
+            if(!$userDetailMileageModel) {
+                throw new DatabaseException('로그 불러오기 실패');
+            }
+            $totalMileage = $userDetailMileageModel->real_mileage + $userDetailMileageModel->event_mileage;
+            if($totalMileage !== $userMileageModel->mileage) {
+                throw new DatabaseException('마일리지 무결성 에러');
+            }
+
+            $userDetailUpdateRow = DB::table('tr_mileage_detail')->where('user_no', Auth::user()->no)->update([
+                'real_mileage' => $userDetailMileageModel->real_mileage + $requestData['data']['price']
+            ]);
+            if(!$userDetailUpdateRow) {
+                throw new DatabaseException('마일리지 적용 실패');
+            }
 
             DB::commit();
             return json_encode(['status' => 'success', 'message' => '충전에 성공 하였습니다.']);
