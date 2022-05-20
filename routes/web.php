@@ -101,6 +101,11 @@ Route::controller(\App\Http\Controllers\AdminController::class)->group(function(
         Route::get('/admin/login', function() {return view('admin.auth.login'); });
         Route::post('/admin/login', 'login');
     });
+    Route::middleware('auth')->group(function() {
+        Route::get('/admin/logout', 'logout');
+        Route::get('/admin/member/list', 'list');
+        Route::get('/admin/withdrawal/list', 'withdrawalList');
+    });
 });
 
 

@@ -33,8 +33,43 @@ class AdminController extends Controller
             }
 
             $request->session()->regenerate();
-            return redirect()->intended();
+            return redirect('/admin');
 
+        } catch (Exception $e) {
+            return redirect()->back();
+        }
+    }
+
+    public function logout(Request $request)
+    {
+        try {
+            Auth::logout();
+
+            $request->session()->invalidate();
+
+            $request->session()->regenerateToken();
+
+            return redirect('/');
+        } catch (Exception $e) {
+            return redirect()->back();
+        }
+    }
+
+    public function list()
+    {
+        try {
+
+            return view('admin.member.list',['data' => DB::table('tr_account')->orderBy('no')->paginate(10)]);
+        } catch (Exception $e) {
+            return redirect()->back();
+        }
+    }
+
+    public function withdrawalList()
+    {
+        try {
+
+            return view('admin.withdrawal.list',['data' => DB::table('tr_account')->orderBy('no')->paginate(10)]);
         } catch (Exception $e) {
             return redirect()->back();
         }

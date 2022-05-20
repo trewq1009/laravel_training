@@ -105,7 +105,6 @@ class MileageController extends Controller
                 throw new DatabaseException();
             }
 
-
             DB::commit();
             return redirect('/');
 

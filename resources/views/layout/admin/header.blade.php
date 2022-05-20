@@ -8,10 +8,10 @@
                     </li>
                     @auth
                     <li class="nav-item">
-                        <a class="nav-link" href="/admin">User List</a>
+                        <a class="nav-link" href="/admin/member/list">User List</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/admin">Withdrawal List</a>
+                        <a class="nav-link" href="/admin/withdrawal/list">Withdrawal List</a>
                     </li>
                     @endauth
                 </ul>
