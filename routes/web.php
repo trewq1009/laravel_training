@@ -104,6 +104,7 @@ Route::controller(\App\Http\Controllers\AdminController::class)->group(function(
     Route::middleware('auth')->group(function() {
         Route::get('/admin/logout', 'logout');
         Route::get('/admin/member/list', 'list');
+
         Route::get('/admin/withdrawal/list', 'withdrawalList');
     });
 });

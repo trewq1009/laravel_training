@@ -55,7 +55,7 @@ class AdminController extends Controller
         }
     }
 
-    public function list()
+    public function list(Request $request)
     {
         try {
 
@@ -65,11 +65,11 @@ class AdminController extends Controller
         }
     }
 
-    public function withdrawalList()
+    public function withdrawalList(Request $request)
     {
         try {
 
-            return view('admin.withdrawal.list',['data' => DB::table('tr_account')->orderBy('no')->paginate(10)]);
+            return view('admin.withdrawal.list');
         } catch (Exception $e) {
             return redirect()->back();
         }
