@@ -15,7 +15,7 @@ class MileageController extends Controller
     public function withdrawal()
     {
         try {
-            $userData = DB::table('tr_mileage')->where('user_no', Auth::user()->no)->first();
+            $userData = DB::table('tr_mileage_detail')->where('user_no', Auth::user()->no)->first();
 
             $viewData = [
                 'real_mileage' => $userData->real_mileage
@@ -43,46 +43,75 @@ class MileageController extends Controller
 
             DB::beginTransaction();
 
-            $userMileageData = DB::table('tr_mileage')->where('user_no', Auth::user()->no)->lockForUpdate()->first();
-
-            $withdrawalLogNo = DB::table('tr_withdrawal_log')->insertGetId([
-                'user_no' => Auth::user()->no,
-                'withdrawal_mileage' => $validated['withdrawalMileage'],
-                'bank_name' => $validated['bankValue'],
-                'bank_account_number' => Crypt::encryptString($validated['bankNumber']),
-                'status' => 'a'
+            $withdrawalNo = DB::table('tr_withdrawal')->insertGetId([
+                'user_no' => Auth::user()->no, 'withdrawal_mileage' => $validated['withdrawalMileage'],
+                'bank_name' => $validated['bankValue'], 'bank_account_number' => Crypt::encryptString($validated['bankNumber'])
             ]);
-            if(!$withdrawalLogNo) {
+            if(!$withdrawalNo) {
+                $validator->errors()->add('withdrawalMileage', '출금신청 에러');
                 throw new DatabaseException();
             }
 
-            $mileageLogNo = DB::table('tr_mileage_log')->insertGetId([
-                'user_no' => Auth::user()->no,
-                'method' => 'withdrawal',
-                'method_no' => $withdrawalLogNo,
-                'before_mileage' => $userMileageData->use_mileage,
+            $userDetailModel = DB::table('tr_mileage_detail')
+                ->where('user_no', Auth::user()->no)->lockForUpdate()->first();
+            if(!$userDetailModel) {
+                $validator->errors()->add('withdrawalMileage', '정보를 불러올수 없습니다.');
+                throw new DatabaseException();
+            }
+            if($userDetailModel->real_mileage < $validated['withdrawalMileage']) {
+                $validator->errors()->add('withdrawalMileage', '출글할 수 있는 마일리지를 넘었습니다.');
+                throw new DatabaseException();
+            }
+
+            $userDetailUpdateRow = DB::table('tr_mileage_detail')->where('user_no', Auth::user()->no)->update([
+                'real_mileage' => $userDetailModel->real_mileage - $validated['withdrawalMileage'],
+                'update_date' => date('Y-m-d H:i:s')
+            ]);
+            if(!$userDetailUpdateRow) {
+                $validator->errors()->add('withdrawalMileage', '마일리지 변동 에러');
+                throw new DatabaseException();
+            }
+
+            $userMileageModel = DB::table('tr_mileage')->where('user_no', Auth::user()->no)->lockForUpdate()->first();
+            if(!$userMileageModel) {
+                $validator->errors()->add('withdrawalMileage', '마일리지 로드 에러');
+                throw new DatabaseException();
+            }
+            $totalMileage = $userDetailModel->real_mileage + $userDetailModel->event_mileage;
+            if($totalMileage !== $userMileageModel->mileage) {
+                $validator->errors()->add('withdrawalMileage', '마일리지 무결성 에러');
+                throw new DatabaseException();
+            }
+
+            $userMileageUpdateRow = DB::table('tr_mileage')->where('user_no', Auth::user()->no)->update([
+                'mileage' => $userDetailModel->real_mileage - $validated['withdrawalMileage'],
+                'using_mileage' => $userMileageModel->using_mileage + $validated['withdrawalMileage'],
+                'update_date' => date('Y-m-d H:i:s')
+            ]);
+            if(!$userMileageUpdateRow) {
+                $validator->errors()->add('withdrawalMileage', '마일리지 변동 에러');
+                throw new DatabaseException();
+            }
+
+            $userMileageLogNo = DB::table('tr_mileage_log')->insertGetId([
+                'user_no' => Auth::user()->no, 'method' => 'withdrawal', 'method_no' => $withdrawalNo,
+                'before_mileage' => $userMileageModel->mileage,
                 'use_mileage' => $validated['withdrawalMileage'],
-                'after_mileage' => $userMileageData->use_mileage - $validated['withdrawalMileage']
+                'after_mileage' => $userMileageModel->mileage - $validated['withdrawalMileage'],
+                'real_mileage_usage' => $validated['withdrawalMileage']
             ]);
-            if(!$mileageLogNo) {
+            if(!$userMileageLogNo) {
+                $validator->errors()->add('withdrawalMileage', '로그 저장 에러');
                 throw new DatabaseException();
             }
 
-            $mileageUpdateRow = DB::table('tr_mileage')->where('user_no', Auth::user()->no)->update([
-                'using_mileage' => $userMileageData->using_mileage + $validated['withdrawalMileage'],
-                'use_mileage' => $userMileageData->use_mileage - $validated['withdrawalMileage'],
-                'real_mileage' => $userMileageData->real_mileage - $validated['withdrawalMileage']
-            ]);
-            if(!$mileageUpdateRow) {
-                throw new DatabaseException();
-            }
 
             DB::commit();
             return redirect('/');
 
         } catch (DatabaseException $e) {
             DB::rollBack();
-            return redirect('/');
+            return redirect()->back()->withErrors($validator)->withInput();
         } catch (Exception $e) {
             return redirect()->back()->withErrors($validator)->withInput();
         }
