@@ -2,7 +2,8 @@
 @include('layout.admin.header')
 
 <section class="container">
-    <form action='<?php echo htmlspecialchars('/');?>' method="get">
+    <form action='<?php echo htmlspecialchars('/');?>' method="get" id="formMethod">
+        <input type="hidden" name="userNo" value="" id="userNo">
         <table class="table">
             <thead>
             <tr>
@@ -23,7 +24,7 @@
                 <td>{{$item->status}}</td>
                 <td>{{$item->registration_date}}</td>
                 <td>
-                    <button type="submit" name="viewUser" value="" class="btn btn-outline-info">Info</button>
+                    <button type="button" onclick="memberDetail(this)" name="viewUser" value="{{$item->no}}" class="btn btn-outline-info">Info</button>
                 </td>
             </tr>
             @endforeach
@@ -34,5 +35,14 @@
         {{$data->links()}}
     </div>
 </section>
+
+<script>
+    function memberDetail(event) {
+        const user_no = event.value;
+        document.querySelector('#userNo').value = user_no
+        document.querySelector('#formMethod').action = '/admin/member/list/' + user_no;
+        document.querySelector('#formMethod').submit();
+    }
+</script>
 
 @include('layout.admin.footer')
