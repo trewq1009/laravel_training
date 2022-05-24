@@ -4,7 +4,7 @@
 <br>
 아래에 링크를 클릭하여 회원가입을 완료해 주세요.
 <br><br>
-<a href="http://127.0.0.1:8000/email/{{$data}}">Click Here!</a>
+<a href="{{$url}}/email/{{$data}}">Click Here!</a>
 
 <br><br>
 감사합니다.

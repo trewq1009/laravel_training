@@ -11,6 +11,7 @@ class NotifyMail extends Mailable
     use Queueable, SerializesModels;
 
     protected $hash;
+    protected $url;
 
     /**
      * Create a new message instance.
@@ -20,6 +21,7 @@ class NotifyMail extends Mailable
     public function __construct($data)
     {
         $this->hash = $data;
+        $this->url = env('APP_URL', 'http://127.0.0.1');
     }
 
     /**
@@ -29,6 +31,6 @@ class NotifyMail extends Mailable
      */
     public function build()
     {
-        return $this->view('mail.signup', ['data' => $this->hash]);
+        return $this->view('mail.signup', ['data' => $this->hash, 'url' => $this->url]);
     }
 }
