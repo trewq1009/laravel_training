@@ -130,41 +130,42 @@ class PaymentController extends Controller
             }
             $validated = $validator->validated();
 
-            $url = 'http://52-79-180-182.nip.io/api/test';
-
-            $response = Http::withHeaders([
-                'Accept' => '*/*',
-                'Content-Type' => 'application/json',
-                'Access-Control-Allow-Origin' => '*',
-            ])->post($url, $request->all());
-
             DB::beginTransaction();
 
-            if(!$response->successful()) {
-                // 실패
-                $failNo = DB::table('tr_payment_log')->insertGetId([
-                    'user_no' => Auth::user()->no,
-                    'method' => $validated['radioValue'],
-                    'payment_mileage' => $validated['price'],
-                    'status' => 'f',
-                    'cancels' => json_encode(['code' => 404, 'information' => '통신 실패'])
-                ]);
-                if(!$failNo) {
-                    throw new DatabaseException('통신 실패');
-                }
-                DB::commit();
-                throw new Exception('통신 실패');
-            }
-
-            $successNo = DB::table('tr_payment_log')->insertGetId([
+            $paymentNo = DB::table('tr_payment_log')->insertGetId([
                 'user_no' => Auth::user()->no,
                 'method' => $validated['radioValue'],
                 'payment_mileage' => $validated['price'],
                 'status' => 'a'
             ]);
-            if(!$successNo) {
-                throw new DatabaseException('로그 저장 실패');
+            if(!$paymentNo) {
+                throw new DatabaseException('로그 생성에 실패하였습니다.');
             }
+
+            $url = env('app_url').'/api/pg';
+            $totalData = $request->all();
+            $totalData->paymentNo = $paymentNo;
+            $response = Http::withHeaders([
+                'Accept' => '*/*',
+                'Content-Type' => 'application/json',
+                'Access-Control-Allow-Origin' => '*',
+            ])->post($url, $totalData);
+
+            if(!$response->successful()) {
+                // 실패
+                $failNo = DB::table('tr_payment_log')->update([
+                    'status' => 'f',
+                    'cancels' => json_encode(['code' => 404, 'information' => '통신 실패'])
+                ]);
+                if(!$failNo) {
+                    DB::rollBack();
+                    throw new DatabaseException('통신 및 로그 저장 실패하였습니다.');
+                }
+                DB::commit();
+                throw new Exception('통신 실패했습니다.');
+            }
+
+
             DB::commit();
 
             $statusCode = $response->status();
