@@ -310,6 +310,7 @@ class AjaxController extends Controller
             }
 
             if($requestData['status'] !== 'success') {
+                DB::commit();
                 return json_encode(['status'=>'fail', 'message' => '로그저장 성공']);
                 die();
             }
@@ -363,5 +364,4 @@ class AjaxController extends Controller
             return json_encode(['status' => 'fail', 'message' => $e->getMessage().$e->getLine()]);
         }
     }
-
 }

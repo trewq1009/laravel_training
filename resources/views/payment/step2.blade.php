@@ -89,49 +89,73 @@
     @endif
 </section>
 <script>
+    // function methodAction(event) {
+    //     if(!window.confirm('충전신청 하시겠습니까?')) return;
+    //     const form_data = $('#methodForm').serializeArray();
+    //     setTimeout(() => {
+    //         $.ajax({
+    //             headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+    //             type: 'POST',
+    //             url: '/ajax/payment',
+    //             data: form_data,
+    //             success: result => {
+    //                 const re_data = JSON.parse(result);
+    //                 if(re_data.status === 'success') {
+    //                     window.alert(re_data.message);
+    //                 } else {
+    //                     window.alert('충전에 실패하였습니다.');
+    //                 }
+    //                 $.ajax({
+    //                     headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+    //                     type: 'POST',
+    //                     url: '/ajax/payment/result',
+    //                     data: {
+    //                         'data' : re_data.data,
+    //                         'message' : re_data.message,
+    //                         'status' : re_data.status,
+    //                         'method' : re_data.method
+    //                     },
+    //                     success: result => {
+    //                         const inner_data = JSON.parse(result);
+    //                         window.location.href = '/';
+    //                     }, error: e => {
+    //                         console.log(e);
+    //                         window.alert('에러가 발생했습니다.');
+    //                         window.location.href = '/';
+    //                     }
+    //                 });
+    //             }, error: e => {
+    //                 console.log(e);
+    //                 window.alert('에러가 발생했습니다.');
+    //                 window.location.href = '/';
+    //             }
+    //         });
+    //     }, 2000)
+    // }
+
     function methodAction(event) {
         if(!window.confirm('충전신청 하시겠습니까?')) return;
         const form_data = $('#methodForm').serializeArray();
-        setTimeout(() => {
-            $.ajax({
-                headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-                type: 'POST',
-                url: '/ajax/payment',
-                data: form_data,
-                success: result => {
-                    const re_data = JSON.parse(result);
-                    if(re_data.status === 'success') {
-                        window.alert(re_data.message);
-                    } else {
-                        window.alert('충전에 실패하였습니다.');
-                    }
-                    $.ajax({
-                        headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-                        type: 'POST',
-                        url: '/ajax/payment/result',
-                        data: {
-                            'data' : re_data.data,
-                            'message' : re_data.message,
-                            'status' : re_data.status,
-                            'method' : re_data.method
-                        },
-                        success: result => {
-                            const inner_data = JSON.parse(result);
-                            window.location.href = '/';
-                        }, error: e => {
-                            console.log(e);
-                            window.alert('에러가 발생했습니다.');
-                            window.location.href = '/';
-                        }
-                    });
-                }, error: e => {
-                    console.log(e);
-                    window.alert('에러가 발생했습니다.');
-                    window.location.href = '/';
-                }
-            });
-        }, 2000)
+        $.ajax({
+            headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+            type: 'POST',
+            url: '/payment/send',
+            data: form_data,
+            success: result => {
+                const re_data = JSON.parse(result);
+                console.log(re_data);
+
+                // if (re_data.status === 'success') {
+                //     window.alert(re_data.message);
+                // } else {
+                //     window.alert('충전에 실패하였습니다.');
+                // }
+            },error: e => {
+                console.log(e);
+            }
+        });
     }
+
 
 </script>
 

@@ -168,7 +168,8 @@ ALTER TABLE tr_image COMMENT '이미지 테이블';
 CREATE UNIQUE INDEX UQ_tr_image_1
     ON tr_image(image_name);
 
-
+-- timestamp default value 0 사용하기 위한 설정
+SET sql_mode = '';
 -- tr_trade Table Create SQL
 CREATE TABLE tr_trade
 (

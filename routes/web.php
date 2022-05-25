@@ -40,6 +40,8 @@ Route::controller(\App\Http\Controllers\PaymentController::class)->group(functio
         Route::post('/payment/credit', 'credit');
         Route::post('/payment/phone', 'phone');
         Route::post('/payment/voucher', 'voucher');
+
+        Route::post('/payment/send', 'send');
     });
 });
 
@@ -69,7 +71,7 @@ Route::controller(\App\Http\Controllers\TradeController::class)->group(function(
 
 // 방명록
 Route::controller(\App\Http\Controllers\VisitorsController::class)->group(function() {
-    Route::get('visitors', 'list')->name('visitors');
+    Route::get('/visitors', 'list')->name('visitors');
     Route::post('/visitors', 'insert');
 });
 

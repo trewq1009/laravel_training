@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Http;
+use GuzzleHttp\Client;
 use Exception;
 use App\Exceptions\DatabaseException;
+use Illuminate\Http\Client\RequestException;
 
 class PaymentController extends Controller
 {
@@ -114,6 +118,49 @@ class PaymentController extends Controller
             return redirect('/');
         } catch (Exception $e) {
             return redirect()->back();
+        }
+    }
+
+    public function send(Request $request)
+    {
+        try {
+            $sendData = $request->all();
+
+//            $url = 'https://jsonplaceholder.typicode.com/todos/1';
+//            $url = env('APP_URL').'/test';
+            $url = 'http://127.0.0.1:8000/api/test';
+
+//            $header = [];
+//
+//            $response = Http::acceptJson()->get($url);
+//
+
+            $response = Http::withHeaders([
+                'Accept' => '*/*',
+                'Content-Type' => 'application/json',
+                'Access-Control-Allow-Origin' => '*',
+            ])->get($url);
+
+            $statusCode = $response->status();
+
+//            $client = new Client([
+//                'base_uri' => $url,
+//                'timeout' => 30.0
+//            ]);
+//            $response = $client->request('GET', 'test', [
+//                'Accept' => 'application/json'
+//            ]);
+//            $statusCode = $response->getStatusCode();
+
+
+//            return json_encode(['status' => 'success' , 'code' => $statusCode, 'data' => $response->json()]);
+            return json_encode(['url' => $url, 'status' => $statusCode, 'body' => $response->json()]);
+
+
+        } catch (GuzzleException $e) {
+            return json_encode(['status' => 'fail', 'message' => $e->getMessage()]);
+        } catch (Exception $e) {
+            return json_encode(['status' => 'fail', 'message' => $e->getMessage()]);
         }
     }
 }
