@@ -2,17 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
-use GuzzleHttp\Client;
 use Exception;
 use App\Exceptions\DatabaseException;
-use Illuminate\Http\Client\RequestException;
 
 class PaymentController extends Controller
 {
@@ -124,43 +121,60 @@ class PaymentController extends Controller
     public function send(Request $request)
     {
         try {
-            $sendData = $request->all();
+            $validator = Validator::make($request->all(), [
+                'radioValue' => ['required', 'alpha'],
+                'price' => ['required', 'integer']
+            ]);
+            if($validator->fails()) {
+                throw new Exception('필수 입력값이 없습니다.');
+            }
+            $validated = $validator->validated();
 
-//            $url = 'https://jsonplaceholder.typicode.com/todos/1';
-//            $url = env('APP_URL').'/test';
-            $url = 'http://127.0.0.1:8000/api/test';
-
-//            $header = [];
-//
-//            $response = Http::acceptJson()->get($url);
-//
+            $url = 'http://52-79-180-182.nip.io/api/test';
 
             $response = Http::withHeaders([
                 'Accept' => '*/*',
                 'Content-Type' => 'application/json',
                 'Access-Control-Allow-Origin' => '*',
-            ])->get($url);
+            ])->post($url, $request->all());
+
+            DB::beginTransaction();
+
+            if(!$response->successful()) {
+                // 실패
+                $failNo = DB::table('tr_payment_log')->insertGetId([
+                    'user_no' => Auth::user()->no,
+                    'method' => $validated['radioValue'],
+                    'payment_mileage' => $validated['price'],
+                    'status' => 'f',
+                    'cancels' => json_encode(['code' => 404, 'information' => '통신 실패'])
+                ]);
+                if(!$failNo) {
+                    throw new DatabaseException('통신 실패');
+                }
+                DB::commit();
+                throw new Exception('통신 실패');
+            }
+
+            $successNo = DB::table('tr_payment_log')->insertGetId([
+                'user_no' => Auth::user()->no,
+                'method' => $validated['radioValue'],
+                'payment_mileage' => $validated['price'],
+                'status' => 'a'
+            ]);
+            if(!$successNo) {
+                throw new DatabaseException('로그 저장 실패');
+            }
+            DB::commit();
 
             $statusCode = $response->status();
+            return json_encode(['status' => 'success' , 'message' => '충전 신청이 완료 되었습니다.', 'code' => $statusCode]);
 
-//            $client = new Client([
-//                'base_uri' => $url,
-//                'timeout' => 30.0
-//            ]);
-//            $response = $client->request('GET', 'test', [
-//                'Accept' => 'application/json'
-//            ]);
-//            $statusCode = $response->getStatusCode();
-
-
-//            return json_encode(['status' => 'success' , 'code' => $statusCode, 'data' => $response->json()]);
-            return json_encode(['url' => $url, 'status' => $statusCode, 'body' => $response->json()]);
-
-
-        } catch (GuzzleException $e) {
-            return json_encode(['status' => 'fail', 'message' => $e->getMessage()]);
+        } catch (DatabaseException $e) {
+            DB::rollBack();
+            return json_encode(['status' => 'fail', 'message' => $e->getMessage().$e->getLine()]);
         } catch (Exception $e) {
-            return json_encode(['status' => 'fail', 'message' => $e->getMessage()]);
+            return json_encode(['status' => 'fail', 'message' => $e->getMessage().$e->getLine()]);
         }
     }
 }

@@ -82,9 +82,10 @@ CREATE TABLE tr_payment_log
     `method`               VARCHAR(10)    NOT NULL    DEFAULT '' COMMENT '결제 수단(credit:카드, phone:휴대전화, voucher:상품권)',
     `payment_mileage`      INT            NOT NULL    DEFAULT 0 COMMENT '충전 마일리지',
     `payment_information`  JSON           NOT NULL    DEFAULT ('{}') COMMENT '결제 상세 내역',
-    `status`               CHAR(1)        NOT NULL    DEFAULT 't' COMMENT '결제 상태(성공:t, 실패:f)',
+    `status`               CHAR(1)        NOT NULL    DEFAULT 'a' COMMENT '결제 상태(결재 완료:t, 결재 실패:f, 결재중:a)',
     `cancels`              JSON           NOT NULL    DEFAULT ('{}') COMMENT '결제 실패 내역',
     `registration_date`    TIMESTAMP      NOT NULL    DEFAULT current_timestamp COMMENT '결제 신청 일자',
+    `update_date`          TIMESTAMP      NOT NULL    DEFAULT current_timestamp COMMENT '업데이트 일자',
      PRIMARY KEY (no)
 );
 
