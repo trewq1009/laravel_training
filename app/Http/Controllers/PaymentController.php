@@ -142,7 +142,7 @@ class PaymentController extends Controller
                 throw new DatabaseException('로그 생성에 실패하였습니다.');
             }
 
-            $url = env('app_url').'/api/pg';
+            $url = env('APP_URL').'/api/pg';
             $totalData = $request->all();
             $totalData->paymentNo = $paymentNo;
             $response = Http::withHeaders([
