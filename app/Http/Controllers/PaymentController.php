@@ -165,11 +165,15 @@ class PaymentController extends Controller
                 throw new Exception('통신 실패했습니다.');
             }
 
+            $resultData = $response->json();
 
-            DB::commit();
 
+
+//            DB::commit();
+            DB::rollBack();
             $statusCode = $response->status();
-            return json_encode(['status' => 'success' , 'message' => '충전 신청이 완료 되었습니다.', 'code' => $statusCode]);
+            return json_encode(['status' => 'test' , 'message' => 'test', 'code' => $statusCode, 'data' => $resultData]);
+//            return json_encode(['status' => 'success' , 'message' => '충전 신청이 완료 되었습니다.', 'code' => $statusCode]);
 
         } catch (DatabaseException $e) {
             DB::rollBack();
