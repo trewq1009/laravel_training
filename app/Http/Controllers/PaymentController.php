@@ -144,7 +144,7 @@ class PaymentController extends Controller
 
             $url = env('APP_URL').'/api/pg';
             $totalData = $request->all();
-            $totalData->paymentNo = $paymentNo;
+            $totalData['paymentNo'] = $paymentNo;
             $response = Http::withHeaders([
                 'Accept' => '*/*',
                 'Content-Type' => 'application/json',
