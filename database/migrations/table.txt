@@ -219,6 +219,7 @@ CREATE TABLE tr_product
     `price`                INT             NOT NULL    DEFAULT 0 COMMENT '가격',
     `amount`               SMALLINT        NOT NULL    DEFAULT 0 COMMENT '상품 갯수',
     `status`               CHAR(1)         NOT NULL    DEFAULT 't' COMMENT '상품 상태(t:판매중,f:삭제, c:거래완료)',
+    'sales_date'           TIMESTAMP       NOT NULL    DEFAULT 0 COMMENT '(거래 완료 일자)',
     `registration_date`    TIMESTAMP       NOT NULL    DEFAULT current_timestamp COMMENT '등록 일자',
     `update_date`          TIMESTAMP       NOT NULL    DEFAULT current_timestamp COMMENT '업데이트 일자',
      PRIMARY KEY (no)

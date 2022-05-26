@@ -34,7 +34,7 @@ class TradeController extends Controller
                 'productName' => ['required'],
                 'imageInfo' => ['required', 'image'],
                 'productPrice' => ['required', 'integer', 'min:1000'],
-                'productAmount' => ['required', 'integer', 'min:1', 'max:99'],
+                'productAmount' => ['required', 'integer', 'min:1', 'max:9999'],
                 'productInformation' => ['required']
             ]);
             if($validator->fails()) {
@@ -228,6 +228,7 @@ class TradeController extends Controller
                 $productUpdateParams = [
                     'amount' => $productModel->amount - $validated['tradeAmount'],
                     'update_date' => date('Y-m-d H:i:s'),
+                    'sales_date' => date('Y-m-d H:i:s'),
                     'status' => 'c'
                 ];
             } else {
@@ -357,7 +358,9 @@ class TradeController extends Controller
             $calcAmount = $productModel->amount + $tradeModel->trade_amount;
 
             $productUpdateRow = DB::table('tr_product')->where('no', $tradeModel->product_no)->update([
-                'amount' => $calcAmount, 'status' => 't', 'update_date' => date('Y-m-d H:i:s')
+                'amount' => $calcAmount,
+                'status' => 't',
+                'update_date' => date('Y-m-d H:i:s')
             ]);
             if(!$productUpdateRow) {
                 $validator->errors()->add('tradeNo', '상품 재설정에 실패 했습니다.');
