@@ -37,10 +37,6 @@ Route::controller(\App\Http\Controllers\PaymentController::class)->group(functio
     Route::middleware('auth')->group(function() {
         Route::get('/payment/step1', function() {return view('payment.step1'); })->name('payment');
         Route::get('/payment/step2', 'method');
-        Route::post('/payment/credit', 'credit');
-        Route::post('/payment/phone', 'phone');
-        Route::post('/payment/voucher', 'voucher');
-
         Route::post('/payment/send', 'send');
     });
 });

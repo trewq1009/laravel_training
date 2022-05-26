@@ -9,17 +9,20 @@ use Illuminate\Support\Facades\Auth;
 use Exception;
 use App\Exceptions\DatabaseException;
 
+const STATUS_TRUE = 't';
+const STATUS_AWAIT = 'a';
+const STATUS_FALSE = 'f';
+const STATUS_CLEAR = 'c';
+
 class TradeController extends Controller
 {
-
     protected array $tradeStatus = ['a'=>'거래중', 'f'=>'거래취소', 't'=>'거래완료'];
-
 
     public function list()
     {
         try {
             return view('trade.list', [
-                'data' => DB::table('tr_product')->where('status', 't')->orderByDesc('no')->paginate(10),
+                'data' => DB::table('tr_product')->where('status', STATUS_TRUE)->orderByDesc('no')->paginate(10),
                 'auth' => Auth::user()
             ]);
         } catch (Exception $e) {
@@ -55,7 +58,7 @@ class TradeController extends Controller
                 'product_information' => $validated['productInformation'],
                 'price' => $validated['productPrice'],
                 'amount' => $validated['productAmount'],
-                'status' => 't'
+                'status' => STATUS_TRUE
             ]);
             if(!$productNo) {
                 throw new DatabaseException();
@@ -65,7 +68,7 @@ class TradeController extends Controller
                 'method' => 'product',
                 'reference_no' => $productNo,
                 'image_name' => $newFileName,
-                'status' => 't'
+                'status' => STATUS_TRUE
             ]);
             if(!$imageNo) {
                 throw new DatabaseException();
@@ -85,8 +88,8 @@ class TradeController extends Controller
     public function detail($no)
     {
         try {
-            $boardModel = DB::table('tr_product')->where('status', 't')->where('no', $no)->first();
-            $imageModel = DB::table('tr_image')->where('status', 't')
+            $boardModel = DB::table('tr_product')->where('status', STATUS_TRUE)->where('no', $no)->first();
+            $imageModel = DB::table('tr_image')->where('status', STATUS_TRUE)
                 ->where('method', 'product')->where('reference_no', $no)->first();
 
             return view('trade.detail', ['board' => $boardModel, 'image' => $imageModel, 'auth' => Auth::user()]);
@@ -115,7 +118,7 @@ class TradeController extends Controller
 
             DB::beginTransaction();
 
-            $productModel = DB::table('tr_product')->where('status', 't')
+            $productModel = DB::table('tr_product')->where('status', STATUS_TRUE)
                 ->where('no', $validated['boardNo'])->lockForUpdate()->first();
 
             if($productModel->user_no === Auth::user()->no) {
@@ -229,7 +232,7 @@ class TradeController extends Controller
                     'amount' => $productModel->amount - $validated['tradeAmount'],
                     'update_date' => date('Y-m-d H:i:s'),
                     'sales_date' => date('Y-m-d H:i:s'),
-                    'status' => 'c'
+                    'status' => STATUS_CLEAR
                 ];
             } else {
                 $productUpdateParams = [
@@ -322,19 +325,19 @@ class TradeController extends Controller
 
             if($validated['tradeName'] === '구매') {
                 $params = [
-                    'buyer_status' => 'f',
+                    'buyer_status' => STATUS_FALSE,
                     'cancel_date' => date('Y-m-d H:i:s'),
                     'buyer_status_date' => date('Y-m-d H:i:s'),
                     'update_date' => date('Y-m-d H:i:s'),
-                    'status' => 'f'
+                    'status' => STATUS_FALSE
                 ];
             } else {
                 $params = [
-                    'seller_status' => 'f',
+                    'seller_status' => STATUS_FALSE,
                     'cancel_date' => date('Y-m-d H:i:s'),
                     'seller_status_date' => date('Y-m-d H:i:s'),
                     'update_date' => date('Y-m-d H:i:s'),
-                    'status' => 'f'
+                    'status' => STATUS_FALSE
                 ];
             }
 
@@ -350,7 +353,7 @@ class TradeController extends Controller
                 $validator->errors()->add('tradeNo', '작업에 실패하였습니다.');
                 throw new DatabaseException();
             }
-            if($productModel->status === 'f') {
+            if($productModel->status === STATUS_FALSE) {
                 $validator->errors()->add('tradeNo', '상품 상태값 에러');
                 throw new DatabaseException();
             }
@@ -359,7 +362,7 @@ class TradeController extends Controller
 
             $productUpdateRow = DB::table('tr_product')->where('no', $tradeModel->product_no)->update([
                 'amount' => $calcAmount,
-                'status' => 't',
+                'status' => STATUS_TRUE,
                 'update_date' => date('Y-m-d H:i:s')
             ]);
             if(!$productUpdateRow) {
@@ -456,7 +459,9 @@ class TradeController extends Controller
                 $validator->errors()->add('tradeNo', '잘못된 게시글 입니다.');
                 throw new DatabaseException();
             }
-            if($tradeModel->seller_status === 'f' || $tradeModel->buyer_status === 'f' || $tradeModel->status === 'f') {
+            if($tradeModel->seller_status === STATUS_FALSE ||
+                $tradeModel->buyer_status === STATUS_FALSE ||
+                $tradeModel->status === STATUS_FALSE) {
                 $validator->errors()->add('tradeNo', '상태값 에러');
                 throw new DatabaseException();
             }
@@ -465,28 +470,28 @@ class TradeController extends Controller
             $flag = false;
             if($validated['tradeName'] === '구매') {
                 $params += [
-                    'buyer_status' => 't',
+                    'buyer_status' => STATUS_TRUE,
                     'buyer_status_date' => date('Y-m-d H:i:s'),
                     'update_date' => date('Y-m-d H:i:s')
                 ];
-                if($tradeModel->seller_status === 't') {
+                if($tradeModel->seller_status === STATUS_TRUE) {
                     $params += [
                         'success_date' => date('Y-m-d H:i:s'),
-                        'status' => 't'
+                        'status' => STATUS_TRUE
                     ];
                     $flag = true;
                 }
 
             } else {
                 $params += [
-                    'seller_status' => 't',
+                    'seller_status' => STATUS_TRUE,
                     'seller_status_date' => date('Y-m-d H:i:s'),
                     'update_date' => date('Y-m-d H:i:s')
                 ];
-                if($tradeModel->buyer_status === 't') {
+                if($tradeModel->buyer_status === STATUS_TRUE) {
                     $params += [
                         'success_date' => date('Y-m-d H:i:s'),
-                        'status' => 't'
+                        'status' => STATUS_TRUE
                     ];
                     $flag = true;
                 }
@@ -614,7 +619,7 @@ class TradeController extends Controller
             DB::beginTransaction();
 
             $boardModel = DB::table('tr_product')->where('no', $validated['boardNo'])
-                ->where('status', 't')->lockForUpdate()->first();
+                ->where('status', STATUS_TRUE)->lockForUpdate()->first();
             if(!$boardModel) {
                 $validator->errors()->add('boardNo', '상품이 존재하지 않습니다.');
                 throw new DatabaseException();
@@ -625,14 +630,14 @@ class TradeController extends Controller
             }
 
             $tradeListModel = DB::table('tr_trade')->where('product_no', $boardModel->no)
-                ->where('status', 'a')->first();
+                ->where('status', STATUS_AWAIT)->first();
             if($tradeListModel) {
                 $validator->errors()->add('boardNo', '현재 거래중인 내역이 있습니다.');
                 throw new DatabaseException();
             }
 
             $boardUpdateRow = DB::table('tr_product')->where('no', $validated['boardNo'])
-                ->update(['status' => 'f', 'update_date' => date('Y-m-d H:i:s')]);
+                ->update(['status' => STATUS_FALSE, 'update_date' => date('Y-m-d H:i:s')]);
             if(!$boardUpdateRow) {
                 $validator->errors()->add('boardNo', '작업에 실패하였습니다.');
                 throw new DatabaseException();
@@ -647,7 +652,7 @@ class TradeController extends Controller
 
             $imageUpdateRow = DB::table('tr_image')->where('method', 'trade')
                 ->where('reference_no', $validated['boardNo'])
-                ->update(['status' => 'f', 'update_date' => date('Y-m-d H:i:s')]);
+                ->update(['status' => STATUS_FALSE, 'update_date' => date('Y-m-d H:i:s')]);
             if(!$imageUpdateRow) {
                 $validator->errors()->add('boardNo', '이미지 삭제에 실패하였습니다.');
                 throw new DatabaseException();
