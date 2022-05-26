@@ -72,7 +72,7 @@ class PaymentController extends Controller
                 'card_account_number' => Crypt::encryptString(implode('-', $inputData['cardNumber']))
             ];
 
-            $paymentNo = DB::table('tr_payment_log')->insertGetId([
+            $paymentNo = DB::table('tr_payment')->insertGetId([
                 'user_no' => Auth::user()->no,
                 'method' => 'credit',
                 'payment_mileage' => $inputData['price'],
@@ -132,7 +132,7 @@ class PaymentController extends Controller
 
             DB::beginTransaction();
 
-            $paymentNo = DB::table('tr_payment_log')->insertGetId([
+            $paymentNo = DB::table('tr_payment')->insertGetId([
                 'user_no' => Auth::user()->no,
                 'method' => $validated['radioValue'],
                 'payment_mileage' => $validated['price'],
@@ -153,9 +153,10 @@ class PaymentController extends Controller
 
             if(!$response->successful()) {
                 // 실패
-                $failNo = DB::table('tr_payment_log')->update([
+                $failNo = DB::table('tr_payment')->where('no', $paymentNo)->update([
                     'status' => 'f',
-                    'cancels' => json_encode(['code' => 404, 'information' => '통신 실패'])
+                    'cancels' => json_encode(['code' => 404, 'information' => '통신 실패']),
+                    'update_date' => date('Y-m-d H:i:s')
                 ]);
                 if(!$failNo) {
                     DB::rollBack();
@@ -166,14 +167,83 @@ class PaymentController extends Controller
             }
 
             $resultData = $response->json();
+            if($resultData->status !== 'success') {
+                $paymentUpdateRow = DB::table('tr_payment')->where('no', $paymentNo)->update([
+                    'status' => 'f',
+                    'cancels' => json_encode(['code' => 200, 'information' => $resultData->message]),
+                    'update_date' => date('Y-m-d H:i:s')
+                ]);
+                if(!$paymentUpdateRow) {
+                    throw new DatabaseException('내역 저장에 실패하였습니다.');
+                }
+                DB::commit();
+                return json_encode(['status' => 'fail', 'message' => $resultData->message]);
+            }
+            if($resultData->payment_no !== $paymentNo) {
+                $paymentUpdateRow = DB::table('tr_payment')->where('no', $paymentNo)->update([
+                    'status' => 'f',
+                    'cancels' => json_encode(['code' => 400, 'information' => 'result data error']),
+                    'update_date' => date('Y-m-d H:i:s')
+                ]);
+                if(!$paymentUpdateRow) {
+                    throw new DatabaseException('내역 저장에 실패하였습니다.');
+                }
+                DB::commit();
+                return json_encode(['status' => 'fail', 'message' => 'PG 반환 데이터 오류']);
+            }
 
+            $paymentUpdateRow = DB::table('tr_payment')->where('no', $paymentNo)->update([
+                'payment_information' => json_encode($resultData->data),
+                'status' => 't',
+                'update_date' => date('Y-m-d H:i:s')
+            ]);
+            if(!$paymentUpdateRow) {
+                throw new DatabaseException('데이터 저장에 실패하였습니다.');
+            }
 
+            $userDetailModel = DB::table('tr_mileage_detail')
+                ->where('user_no', Auth::user()->no)->lockForUpdate()->first();
+            if(!$userDetailModel) {
+                throw new DatabaseException('유저의 마일리지를 불러올 수 없습니다.');
+            }
+            $detailUpdateRow = DB::table('tr_mileage_detail')->where('user_no', Auth::user()->no)->update([
+                'real_mileage' => $userDetailModel->real_mileage + $resultData->data->price,
+                'update_date' => date('Y-m-d H:i:s')
+            ]);
+            if(!$detailUpdateRow) {
+                throw new DatabaseException('마일리지 충전에 실패하였습니다.');
+            }
 
-//            DB::commit();
-            DB::rollBack();
-            $statusCode = $response->status();
-            return json_encode(['status' => 'test' , 'message' => 'test', 'code' => $statusCode, 'data' => $resultData]);
-//            return json_encode(['status' => 'success' , 'message' => '충전 신청이 완료 되었습니다.', 'code' => $statusCode]);
+            $userMileageModel = DB::table('tr_mileage')
+                ->where('user_no', Auth::user()->no)->lockForUpdate()->first();
+            if(!$userMileageModel) {
+                throw new DatabaseException('유저의 마일리지를 불러올 수 없습니다.');
+            }
+            if($userMileageModel->mileage !== $userDetailModel->real_mileage + $userDetailModel->event_mileage) {
+                throw new DatabaseException('데이터 무결성 에러');
+            }
+            $mileageUpdateRow = DB::table('tr_mileage')->where('user_no', Auth::user()->no)->update([
+                'mileage' => $userMileageModel->mileage + $resultData->data->price,
+                'update_date' => date('Y-m-d H:i:s')
+            ]);
+            if(!$mileageUpdateRow) {
+                throw new DatabaseException('마일리지 충전에 실패하였습니다.');
+            }
+
+            $mileageLogNo = DB::table('tr_mileage_log')->insertGetId([
+                'user_no' => Auth::user()->no,
+                'method' => 'payment',
+                'method_no' => $paymentNo,
+                'before_mileage' => $userMileageModel->mileage,
+                'use_mileage' => $resultData->data->price,
+                'after_mileage' => $userMileageModel->mileage + $resultData->data->price
+            ]);
+            if(!$mileageLogNo) {
+                throw new DatabaseException('로그 저장에 실패하였습니다.');
+            }
+
+            DB::commit();
+            return json_encode(['status' => 'success' , 'message' => '충전에 성공하셨습니다']);
 
         } catch (DatabaseException $e) {
             DB::rollBack();

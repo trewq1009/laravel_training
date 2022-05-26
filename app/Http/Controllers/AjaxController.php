@@ -304,7 +304,7 @@ class AjaxController extends Controller
 
             DB::beginTransaction();
 
-            $paymentLogNo = DB::table('tr_payment_log')->insertGetId($params);
+            $paymentLogNo = DB::table('tr_payment')->insertGetId($params);
             if(!$paymentLogNo) {
                 throw new DatabaseException('결제 로그 등록 실패');
             }

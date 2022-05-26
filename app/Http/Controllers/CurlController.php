@@ -15,16 +15,16 @@ class CurlController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'paymentNo' => ['required'],
                 'radioValue' => ['required'],
-                'price' => ['required']
+                'price' => ['required'],
+                'paymentNo' => ['required']
             ]);
             if($validator->fails()) {
                 throw new CustomException('필수 정보가 없습니다.');
             }
-            $validated = $validator->validated();
+            $preValidated = $validator->validated();
 
-            if($validated['radioValue'] === 'credit') {
+            if($preValidated['radioValue'] === 'credit') {
                 $validator = Validator::make($request->all(), [
                     'cardNumber' => ['required', 'size:4'],
                     'cardMonth' => ['required', 'integer'],
@@ -63,21 +63,22 @@ class CurlController extends Controller
                     }
                     $sendData['cardNumber'][$key] = Crypt::encryptString($item);
                 }
+                $sendData['price'] = $preValidated['price'];
                 $sendData['cardDate'] = Crypt::encryptString($cardDate);
                 $sendData['cardPassword'] = Crypt::encryptString($validated['cardPassword']);
 
-            } else if($validated['radioValue'] === 'phone') {
+            } else if($preValidated['radioValue'] === 'phone') {
 
-            } else if($validated['radioValue'] === 'voucher') {
+            } else if($preValidated['radioValue'] === 'voucher') {
 
             } else {
                 throw new CustomException('통신 오류');
             }
 
-
             return response()->json([
                 'status' => 'success',
-                'data' => $sendData
+                'data' => $sendData,
+                'payment_no' => $preValidated['paymentNo']
             ]);
 
 

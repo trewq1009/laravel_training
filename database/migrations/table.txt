@@ -74,8 +74,8 @@ ALTER TABLE tr_withdrawal
         REFERENCES tr_account (no) ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 
--- tr_payment_log Table Create SQL
-CREATE TABLE tr_payment_log
+-- tr_payment Table Create SQL
+CREATE TABLE tr_payment
 (
     `no`                   BIGINT         NOT NULL    AUTO_INCREMENT COMMENT 'AI Index',
     `user_no`              BIGINT         NOT NULL    DEFAULT 0 COMMENT '유저 PK',
@@ -89,13 +89,13 @@ CREATE TABLE tr_payment_log
      PRIMARY KEY (no)
 );
 
-ALTER TABLE tr_payment_log COMMENT '마일리지 충전 로그';
+ALTER TABLE tr_payment COMMENT '마일리지 충전 로그';
 
-CREATE INDEX IX_tr_payment_log_1
-    ON tr_payment_log(user_no, status);
+CREATE INDEX IX_tr_payment_1
+    ON tr_payment(user_no, status);
 
-ALTER TABLE tr_payment_log
-    ADD CONSTRAINT FK_tr_payment_log_user_no_tr_account_no FOREIGN KEY (user_no)
+ALTER TABLE tr_payment
+    ADD CONSTRAINT FK_tr_payment_user_no_tr_account_no FOREIGN KEY (user_no)
         REFERENCES tr_account (no) ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 
