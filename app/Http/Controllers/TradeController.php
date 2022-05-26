@@ -100,7 +100,8 @@ class TradeController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'boardNo' => ['required', 'integer'], 'tradeAmount' => ['required', 'integer', 'min:1']
+                'boardNo' => ['required', 'integer'],
+                'tradeAmount' => ['required', 'integer', 'min:1']
             ]);
             if($validator->fails()) {
                 throw new Exception();
@@ -319,11 +320,21 @@ class TradeController extends Controller
             }
 
             if($validated['tradeName'] === '구매') {
-                $params = ['buyer_status' => 'f', 'cancel_date' => date('Y-m-d H:i:s'),
-                    'buyer_status_date' => date('Y-m-d H:i:s'), 'update_date' => date('Y-m-d H:i:s')];
+                $params = [
+                    'buyer_status' => 'f',
+                    'cancel_date' => date('Y-m-d H:i:s'),
+                    'buyer_status_date' => date('Y-m-d H:i:s'),
+                    'update_date' => date('Y-m-d H:i:s'),
+                    'status' => 'f'
+                ];
             } else {
-                $params = ['seller_status' => 'f', 'cancel_date' => date('Y-m-d H:i:s'),
-                    'seller_status_date' => date('Y-m-d H:i:s'), 'update_date' => date('Y-m-d H:i:s')];
+                $params = [
+                    'seller_status' => 'f',
+                    'cancel_date' => date('Y-m-d H:i:s'),
+                    'seller_status_date' => date('Y-m-d H:i:s'),
+                    'update_date' => date('Y-m-d H:i:s'),
+                    'status' => 'f'
+                ];
             }
 
             $tradeUpdateRow = DB::table('tr_trade')->where('no', $validated['tradeNo'])->update($params);
@@ -442,7 +453,7 @@ class TradeController extends Controller
                 $validator->errors()->add('tradeNo', '잘못된 게시글 입니다.');
                 throw new DatabaseException();
             }
-            if($tradeModel->seller_status === 'f' || $tradeModel->buyer_status === 'f') {
+            if($tradeModel->seller_status === 'f' || $tradeModel->buyer_status === 'f' || $tradeModel->status === 'f') {
                 $validator->errors()->add('tradeNo', '상태값 에러');
                 throw new DatabaseException();
             }
@@ -456,7 +467,10 @@ class TradeController extends Controller
                     'update_date' => date('Y-m-d H:i:s')
                 ];
                 if($tradeModel->seller_status === 't') {
-                    $params += ['success_date' => date('Y-m-d H:i:s')];
+                    $params += [
+                        'success_date' => date('Y-m-d H:i:s'),
+                        'status' => 't'
+                    ];
                     $flag = true;
                 }
 
@@ -467,7 +481,10 @@ class TradeController extends Controller
                     'update_date' => date('Y-m-d H:i:s')
                 ];
                 if($tradeModel->buyer_status === 't') {
-                    $params += ['success_date' => date('Y-m-d H:i:s')];
+                    $params += [
+                        'success_date' => date('Y-m-d H:i:s'),
+                        'status' => 't'
+                    ];
                     $flag = true;
                 }
             }
@@ -605,7 +622,7 @@ class TradeController extends Controller
             }
 
             $tradeListModel = DB::table('tr_trade')->where('product_no', $boardModel->no)
-                ->where('status', 'like', 'a%')->first();
+                ->where('status', 'a')->first();
             if($tradeListModel) {
                 $validator->errors()->add('boardNo', '현재 거래중인 내역이 있습니다.');
                 throw new DatabaseException();
