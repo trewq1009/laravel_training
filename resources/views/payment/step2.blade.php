@@ -143,13 +143,14 @@
             data: form_data,
             success: result => {
                 const re_data = JSON.parse(result);
-                if (re_data.status === 'success') {
-                    window.alert(re_data.message);
-                    window.location.href = '/profile';
-                } else {
-                    window.alert('충전에 실패하였습니다.');
-                    window.location.href = '/';
-                }
+                console.log(re_data);
+                // if (re_data.status === 'success') {
+                //     window.alert(re_data.message);
+                //     window.location.href = '/profile';
+                // } else {
+                //     window.alert('충전에 실패하였습니다.');
+                //     window.location.href = '/';
+                // }
             },error: e => {
                 console.log(e);
             }
