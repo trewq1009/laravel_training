@@ -29,13 +29,13 @@ class AuthController extends Controller
             }
             $validated = $validator->validated();
 
-            $dbIdData = AuthClass::findOne('id', $validated['userId']);
+            $dbIdData = DB::table('tr_account')->where('id', $validated['userId'])->first();
             if($dbIdData) {
                 $validator->errors()->add('userId', '중복된 아이디 입니다.');
                 throw new Exception();
             }
 
-            $dbEmailData = AuthClass::findOne('email', $validated['userEmail']);
+            $dbEmailData = DB::table('tr_account')->where('email', $validated['userEmail'])->first();
             if($dbEmailData) {
                 $validator->errors()->add('userEmail', '중복된 이메일 입니다.');
                 throw new Exception();
@@ -43,7 +43,7 @@ class AuthController extends Controller
 
             DB::beginTransaction();
 
-            $userNo = AuthClass::create([
+            $userNo = DB::table('tr_account')->insertGetId([
                 'id' => $validated['userId'],
                 'password' => Hash::make($validated['userPw']),
                 'name' => Crypt::encryptString($validated['userName']),
@@ -105,7 +105,7 @@ class AuthController extends Controller
             $userData['id'] = $validated['userId'];
             $userData['password'] = $validated['userPw'];
 
-            $userModelData = AuthClass::findOne('id', $userData['id']);
+            $userModelData = DB::table('tr_account')->where('id', $userData['id'])->first();
             if(!$userModelData) {
                 $validator->errors()->add('userId', '정보를 다시 확인해 주세요.');
                 throw new Exception();
@@ -190,7 +190,7 @@ class AuthController extends Controller
 
             DB::beginTransaction();
 
-            $updateRow = AuthClass::update([
+            $updateRow = DB::table('tr_account')->where('no', Auth::user()->no)->update([
                 'name' => Crypt::encryptString($validated['userName']),
                 'password' => Hash::make($validated['userPw']),
                 'update_date' => date('Y-m-d H:i:s')
@@ -216,8 +216,8 @@ class AuthController extends Controller
         try {
 
             DB::beginTransaction();
-            $userUpdateRow = AuthClass::update([
-                'status' => AuthClass::STATUS_AWAIT,
+            $userUpdateRow = DB::table('tr_account')->where('no', Auth::user()->no)->update([
+                'status' => 'a',
                 'update_date' => date('Y-m-d H:i:s')
             ]);
             if(!$userUpdateRow) {
