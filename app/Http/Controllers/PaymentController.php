@@ -86,6 +86,15 @@ class PaymentController extends Controller
                 throw new Exception('통신 실패했습니다.');
             }
 
+            /*
+             * 기본 결재 정보 검증이 끝났으면
+             * 다시 cURL 을 보내 결재를 준비한다
+             * 결재시 응답받을 api 주소도 함께 보낸 후
+             * 그곳에서 확인 후 보낸 주소로 cURL 다시 보낸다
+             * 유저측 에서 받을 api 를 만들어야 한다
+             */
+
+
             $resultData = $response->json();
             if($resultData['status'] !== 'success') {
                 $paymentUpdateRow = DB::table('tr_payment')->where('no', $paymentNo)->update([
