@@ -14,9 +14,9 @@ use Exception;
 class AuthController extends Controller
 {
 
-    const STATUS_TRUE = 't';
     const STATUS_FALSE = 'f';
     const STATUS_AWAIT = 'a';
+    const METHOD_JOIN = 'join';
 
     public function create(Request $request) {
         try {
@@ -60,7 +60,7 @@ class AuthController extends Controller
 
             $userMileageLogNo = DB::table('tr_mileage_log')->insertGetId([
                 'user_no' => $userNo,
-                'method' => 'join'
+                'method' => self::METHOD_JOIN
             ]);
             if(!$userMileageLogNo) {
                 $validator->errors()->add('field', '회원 가입 로그 생성에 실패했습니다.');

@@ -12,6 +12,10 @@ use Exception;
 
 class AdminController extends Controller
 {
+
+    const STATUS_TRUE = 't';
+    const STATUS_AWAIT = 'a';
+
     public function login(Request $request)
     {
         try {
@@ -26,7 +30,8 @@ class AdminController extends Controller
             $userData['id'] = $validated['adminId'];
             $userData['password'] = $validated['adminPw'];
 
-            $userModel = DB::table('tr_account_admin')->where('status', 't')->where('id', $userData['id'])->first();
+            $userModel = DB::table('tr_account_admin')
+                ->where('status', self::STATUS_TRUE)->where('id', $userData['id'])->first();
             if(!$userModel) {
                 throw new Exception();
             }
@@ -61,7 +66,9 @@ class AdminController extends Controller
     {
         try {
 
-            return view('admin.member.list',['data' => DB::table('tr_account')->orderByDesc('no')->paginate(10)]);
+            return view(
+            'admin.member.list',
+                ['data' => DB::table('tr_account')->orderByDesc('no')->paginate(10)]);
         } catch (Exception $e) {
             return redirect()->back();
         }
@@ -89,10 +96,10 @@ class AdminController extends Controller
 
             $userModel->name = Crypt::decryptString($userModel->name);
             $userModel->email = Crypt::decryptString($userModel->email);
-            $userModel->email_status = $userModel->email_status === 't' ? '이메일 인증 완료' : '이메일 미인증';
-            if($userModel->status === 't') {
+            $userModel->email_status = $userModel->email_status === self::STATUS_TRUE ? '이메일 인증 완료' : '이메일 미인증';
+            if($userModel->status === self::STATUS_TRUE) {
                 $userModel->status_kr = '일반회원';
-            } else if($userModel->status === 'a') {
+            } else if($userModel->status === self::STATUS_AWAIT) {
                 $userModel->status_kr = '탈퇴신청회원';
             } else {
                 $userModel->status_kr = '탈퇴회원';
@@ -127,7 +134,7 @@ class AdminController extends Controller
     {
         try {
 
-            $paginate = DB::table('tr_withdrawal')->where('status', 'a')
+            $paginate = DB::table('tr_withdrawal')->where('status', self::STATUS_AWAIT)
                 ->orderByDesc('no')->paginate(10);
             $data = (object)$paginate;
             $data = json_encode($data);
@@ -188,27 +195,27 @@ class AdminController extends Controller
 
             $withdrawalModel = DB::table('tr_withdrawal')->where('no', $no)->lockForUpdate()->first();
             if(!$withdrawalModel) {
-                throw new Exception();
+                throw new DatabaseException();
             }
-            if($withdrawalModel->status !== 'a') {
-                throw new Exception();
+            if($withdrawalModel->status !== self::STATUS_AWAIT) {
+                throw new DatabaseException();
             }
 
             $withdrawalUpdateRow = DB::table('tr_withdrawal')->where('no', $no)->update([
-                'status' => 't',
+                'status' => self::STATUS_TRUE,
                 'update_date' => date('Y-m-d H:i:s')
             ]);
             if(!$withdrawalUpdateRow) {
-                throw new Exception();
+                throw new DatabaseException();
             }
 
             $userMileageModel = DB::table('tr_mileage')
                 ->where('user_no', $withdrawalModel->user_no)->lockForUpdate()->first();
             if(!$userMileageModel) {
-                throw new Exception();
+                throw new DatabaseException();
             }
             if($userMileageModel->using_mileage < $withdrawalModel->withdrawal_mileage) {
-                throw new Exception();
+                throw new DatabaseException();
             }
 
             $userMileageUpdateRow = DB::table('tr_mileage')->where('user_no', $withdrawalModel->user_no)->update([
@@ -216,7 +223,7 @@ class AdminController extends Controller
                 'update_date' => date('Y-m-d H:i:s')
             ]);
             if(!$userMileageUpdateRow) {
-                throw new Exception();
+                throw new DatabaseException();
             }
 
             DB::commit();

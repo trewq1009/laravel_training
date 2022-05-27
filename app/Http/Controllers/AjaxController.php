@@ -13,6 +13,12 @@ use App\Exceptions\DatabaseException;
 
 class AjaxController extends Controller
 {
+
+    const STATUS_TRUE = 't';
+    const STATUS_FALSE = 'f';
+    const TYPE_MEMBER = 'm';
+    const TYPE_GUEST = 'g';
+
     public function visitorsList(Request $request)
     {
         try {
@@ -25,13 +31,13 @@ class AjaxController extends Controller
             $inputData = $validator->validated();
 
             $listData = DB::table('tr_visitors_board')->where('parents_no', $inputData['board_num'])
-                ->where('status', 't')->orderByDesc('no')->paginate(10);
+                ->where('status', self::STATUS_TRUE)->orderByDesc('no')->paginate(10);
 
             $listData = (object)$listData;
             $listData = json_encode($listData);
             $listData = json_decode($listData, true);
             foreach ($listData['data'] as $key => $value) {
-                if($value['user_type'] === 'm') {
+                if($value['user_type'] === self::TYPE_MEMBER) {
                     $listData['data'][$key]['user_name'] = Crypt::decryptString($value['user_name']);
                 }
             }
@@ -63,12 +69,20 @@ class AjaxController extends Controller
                 }
                 $inputData = array_merge($inputData, $passwordValidator->validated());
 
-                $params = ['user_type'=>'g', 'user_name'=>'게스트', 'visitors_password'=>Hash::make($inputData['comment_password']),
-                            'parents_no'=>$inputData['parent_no'], 'content'=>$inputData['comment']];
+                $params = [
+                    'user_type' => self::TYPE_GUEST,
+                    'user_name'=>'게스트',
+                    'visitors_password'=>Hash::make($inputData['comment_password']),
+                    'parents_no'=>$inputData['parent_no'],
+                    'content'=>$inputData['comment']];
             } else {
                 $userModel = Auth::user();
-                $params = ['user_type'=>'m', 'user_no'=>$userModel->no, 'user_name'=>$userModel->name,
-                            'parents_no'=>$inputData['parent_no'], 'content'=>$inputData['comment']];
+                $params = [
+                    'user_type'=>self::TYPE_MEMBER,
+                    'user_no'=>$userModel->no,
+                    'user_name'=>$userModel->name,
+                    'parents_no'=>$inputData['parent_no'],
+                    'content'=>$inputData['comment']];
             }
 
             DB::beginTransaction();
@@ -106,7 +120,7 @@ class AjaxController extends Controller
 
             $validated = $validator->validated();
 
-            if($validated['board_type'] === 'g') {
+            if($validated['board_type'] === self::TYPE_GUEST) {
                 $passwordValidator = Validator::make($request->only('password'), [
                     'password'=> ['required', 'alpha_num']
                 ]);
@@ -116,12 +130,12 @@ class AjaxController extends Controller
                 $validated = array_merge($validated, $passwordValidator->validated());
             }
 
-            $boardModel = DB::table('tr_visitors_board')->where('status', 't')
+            $boardModel = DB::table('tr_visitors_board')->where('status', self::STATUS_TRUE)
                 ->where('no', $validated['board_no'])->lockForUpdate()->first();
             if(!$boardModel) {
                 throw new Exception('해당되는 게시글이 존재하지 않습니다.');
             }
-            if($boardModel->user_type === 'g') {
+            if($boardModel->user_type === self::TYPE_GUEST) {
                 if(!Hash::check($validated['password'], $boardModel->visitors_password)) {
                     throw new Exception('패스워드가 일치하지 않습니다.');
                 }
@@ -133,8 +147,11 @@ class AjaxController extends Controller
 
             DB::beginTransaction();
 
-            $updateData = DB::table('tr_visitors_board')->where('status', 't')
-                ->where('no', $validated['board_no'])->update(['status' => 'f']);
+            $updateData = DB::table('tr_visitors_board')->where('status', self::STATUS_TRUE)
+                ->where('no', $validated['board_no'])->update([
+                    'status' => self::STATUS_FALSE,
+                    'update_date' => date('Y-m-d H:i:s')
+                ]);
             if(!$updateData) {
                 throw new DatabaseException('삭제에 실패했습니다.');
             }
@@ -165,7 +182,7 @@ class AjaxController extends Controller
 
             $validated = $validator->validated();
 
-            if($validated['board_type'] === 'g') {
+            if($validated['board_type'] === self::TYPE_GUEST) {
                 $passwordValidator = Validator::make($request->only('password'), [
                     'password' => ['required', 'alpha_num']
                 ]);
@@ -178,12 +195,12 @@ class AjaxController extends Controller
             DB::beginTransaction();
 
             $boardModel = DB::table('tr_visitors_board')->where('no' , $validated['board_no'])
-                ->where('status', 't')->lockForUpdate()->first();
+                ->where('status', self::STATUS_TRUE)->lockForUpdate()->first();
             if(!$boardModel) {
                 throw new DatabaseException('게시글이 존재하지 않습니다.');
             }
 
-            if($validated['board_type'] === 'g') {
+            if($validated['board_type'] === self::TYPE_GUEST) {
                 if(!Hash::check($validated['password'], $boardModel->visitors_password)) {
                     throw new DatabaseException('패스워드를 다시 확인 해주세요.');
                 }
@@ -194,7 +211,7 @@ class AjaxController extends Controller
             }
 
             $updateRow = DB::table('tr_visitors_board')->where('no', $validated['board_no'])
-                ->where('status', 't')->update(['content' => $validated['text_data']]);
+                ->where('status', self::STATUS_TRUE)->update(['content' => $validated['text_data']]);
             if(!$updateRow) {
                 throw new DatabaseException('수정에 실패하였습니다.');
             }
