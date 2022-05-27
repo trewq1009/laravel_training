@@ -92,8 +92,9 @@ Route::controller(\App\Http\Controllers\MailController::class)->group(function()
 
 // 관리자
 Route::controller(\App\Http\Controllers\AdminController::class)->group(function() {
+    Route::get('/admin', function() {return view('admin.home'); })->withoutMiddleware('guest')->name('admin');
+
     Route::middleware('guest')->group(function() {
-        Route::get('/admin', function() {return view('admin.home'); })->withoutMiddleware('guest')->name('admin');
         Route::get('/admin/register', function() {return view('admin.auth.register'); });
         Route::post('/admin/register', 'sign');
         Route::get('/admin/login', function() {return view('admin.auth.login'); });
