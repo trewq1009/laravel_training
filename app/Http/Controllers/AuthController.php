@@ -8,12 +8,16 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
-use App\Classes\AuthClass;
 use App\Exceptions\DatabaseException;
 use Exception;
 
 class AuthController extends Controller
 {
+
+    const STATUS_TRUE = 't';
+    const STATUS_FALSE = 'f';
+    const STATUS_AWAIT = 'a';
+
     public function create(Request $request) {
         try {
             $validator =  Validator::make($request->all(),[
@@ -110,11 +114,11 @@ class AuthController extends Controller
                 $validator->errors()->add('userId', '정보를 다시 확인해 주세요.');
                 throw new Exception();
             }
-            if($userModelData->email_status == 'f') {
+            if($userModelData->email_status == STATUS_FALSE) {
                 $validator->errors()->add('userId', '이메일 인증을 완료해 주세요.');
                 throw new Exception();
             }
-            if($userModelData->status === 'a' || $userModelData->status === 'f') {
+            if($userModelData->status === STATUS_AWAIT || $userModelData->status === STATUS_FALSE) {
                 $validator->errors()->add('userId', '탈퇴신청 및 탈퇴 회원 입니다.');
                 throw new Exception();
             }
@@ -217,7 +221,7 @@ class AuthController extends Controller
 
             DB::beginTransaction();
             $userUpdateRow = DB::table('tr_account')->where('no', Auth::user()->no)->update([
-                'status' => 'a',
+                'status' => STATUS_AWAIT,
                 'update_date' => date('Y-m-d H:i:s')
             ]);
             if(!$userUpdateRow) {
