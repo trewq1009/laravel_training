@@ -13,24 +13,29 @@ use App\Exceptions\DatabaseException;
 
 class VisitorsController extends Controller
 {
+
+    const STATUS_TRUE = 't';
+    const TYPE_MEMBER = 'm';
+    const TYPE_GUEST = 'g';
+
     public function list()
     {
         try {
-            $data = DB::table('tr_visitors_board')->where('status', 't')
+            $data = DB::table('tr_visitors_board')->where('status', self::STATUS_TRUE)
                 ->where('parents_no', '0')->orderByDesc('no')->paginate(10);
             $data = (object)$data;
             $data = json_encode($data);
             $data = json_decode($data);
 
             foreach ($data->data as $key => $value) {
-                if($value->user_type === 'm') {
+                if($value->user_type === self::TYPE_MEMBER) {
                     // 이름 복호화
                     $data->data[$key]->user_name = Crypt::decryptString($value->user_name);
                 }
 
                 // 답글 수
                 $data->data[$key]->comment_count = DB::table('tr_visitors_board')
-                    ->where('status', 't')->where('parents_no', $value->no)->count();
+                    ->where('status', self::STATUS_TRUE)->where('parents_no', $value->no)->count();
             }
 
 
@@ -59,9 +64,15 @@ class VisitorsController extends Controller
             $validated = $validator->validated();
 
             if(Auth::check()) {
-                $params = ['user_type'=>'m', 'user_no'=>Auth::user()->no, 'user_name'=>Auth::user()->name, 'content'=>$validated['content']];
+                $params = [
+                    'user_type' => self::TYPE_MEMBER,
+                    'user_no' => Auth::user()->no,
+                    'user_name' => Auth::user()->name,
+                    'content' => $validated['content']];
             } else {
-                $params = ['user_type'=>'g', 'visitors_password'=>Hash::make($validated['visitorsPassword']), 'content'=>$validated['content']];
+                $params = ['user_type' => self::TYPE_GUEST,
+                    'visitors_password' => Hash::make($validated['visitorsPassword']),
+                    'content' => $validated['content']];
             }
 
             DB::beginTransaction();

@@ -44,8 +44,10 @@ class MileageController extends Controller
             DB::beginTransaction();
 
             $withdrawalNo = DB::table('tr_withdrawal')->insertGetId([
-                'user_no' => Auth::user()->no, 'withdrawal_mileage' => $validated['withdrawalMileage'],
-                'bank_name' => $validated['bankValue'], 'bank_account_number' => Crypt::encryptString($validated['bankNumber'])
+                'user_no' => Auth::user()->no,
+                'withdrawal_mileage' => $validated['withdrawalMileage'],
+                'bank_name' => $validated['bankValue'],
+                'bank_account_number' => Crypt::encryptString($validated['bankNumber'])
             ]);
             if(!$withdrawalNo) {
                 $validator->errors()->add('withdrawalMileage', '출금신청 에러');

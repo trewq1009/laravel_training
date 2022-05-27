@@ -13,6 +13,10 @@ use App\Exceptions\DatabaseException;
 
 class MailController extends Controller
 {
+
+    const METHOD_TRUE = 't';
+    const METHOD_FALSE = 'f';
+
     public function sendMail($email, $no)
     {
         try {
@@ -32,7 +36,7 @@ class MailController extends Controller
         try {
             $no = Crypt::decryptString($hash);
 
-            $userModel = DB::table('tr_account')->where('email_status', 'f')
+            $userModel = DB::table('tr_account')->where('email_status', self::METHOD_FALSE)
                 ->where('no', $no)->first();
             if(!$userModel) {
                 throw new Exception();
@@ -40,7 +44,8 @@ class MailController extends Controller
 
             DB::beginTransaction();
 
-            $userUpdateRow = DB::table('tr_account')->where('no', $no)->update(['email_status'=>'t']);
+            $userUpdateRow = DB::table('tr_account')
+                ->where('no', $no)->update(['email_status' => self::METHOD_TRUE]);
             if(!$userUpdateRow) {
                 throw new DatabaseException();
             }

@@ -13,6 +13,10 @@ use App\Exceptions\DatabaseException;
 
 class PaymentController extends Controller
 {
+    const STATUS_TRUE = 't';
+    const STATUS_FALSE = 'f';
+    const STATUS_AWAIT = 'a';
+
     public function method(Request $request)
     {
         try {
@@ -52,7 +56,7 @@ class PaymentController extends Controller
                 'user_no' => Auth::user()->no,
                 'method' => $validated['radioValue'],
                 'payment_mileage' => $validated['price'],
-                'status' => 'a'
+                'status' => self::STATUS_AWAIT
             ]);
             if(!$paymentNo) {
                 throw new DatabaseException('로그 생성에 실패하였습니다.');
@@ -70,7 +74,7 @@ class PaymentController extends Controller
             if(!$response->successful()) {
                 // 실패
                 $failNo = DB::table('tr_payment')->where('no', $paymentNo)->update([
-                    'status' => 'f',
+                    'status' => self::STATUS_FALSE,
                     'cancels' => json_encode(['code' => 404, 'information' => '통신 실패']),
                     'update_date' => date('Y-m-d H:i:s')
                 ]);
@@ -85,7 +89,7 @@ class PaymentController extends Controller
             $resultData = $response->json();
             if($resultData['status'] !== 'success') {
                 $paymentUpdateRow = DB::table('tr_payment')->where('no', $paymentNo)->update([
-                    'status' => 'f',
+                    'status' => self::STATUS_FALSE,
                     'cancels' => json_encode(['code' => 200, 'information' => $resultData['message']]),
                     'update_date' => date('Y-m-d H:i:s')
                 ]);
@@ -97,7 +101,7 @@ class PaymentController extends Controller
             }
             if($resultData['payment_no'] !== $paymentNo) {
                 $paymentUpdateRow = DB::table('tr_payment')->where('no', $paymentNo)->update([
-                    'status' => 'f',
+                    'status' => self::STATUS_FALSE,
                     'cancels' => json_encode(['code' => 400, 'information' => 'result data error']),
                     'update_date' => date('Y-m-d H:i:s')
                 ]);
@@ -110,7 +114,7 @@ class PaymentController extends Controller
 
             $paymentUpdateRow = DB::table('tr_payment')->where('no', $paymentNo)->update([
                 'payment_information' => json_encode($resultData['data']),
-                'status' => 't',
+                'status' => self::STATUS_TRUE,
                 'update_date' => date('Y-m-d H:i:s')
             ]);
             if(!$paymentUpdateRow) {

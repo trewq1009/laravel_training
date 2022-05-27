@@ -114,11 +114,11 @@ class AuthController extends Controller
                 $validator->errors()->add('userId', '정보를 다시 확인해 주세요.');
                 throw new Exception();
             }
-            if($userModelData->email_status == STATUS_FALSE) {
+            if($userModelData->email_status == self::STATUS_FALSE) {
                 $validator->errors()->add('userId', '이메일 인증을 완료해 주세요.');
                 throw new Exception();
             }
-            if($userModelData->status === STATUS_AWAIT || $userModelData->status === STATUS_FALSE) {
+            if($userModelData->status === self::STATUS_AWAIT || $userModelData->status === self::STATUS_FALSE) {
                 $validator->errors()->add('userId', '탈퇴신청 및 탈퇴 회원 입니다.');
                 throw new Exception();
             }
@@ -221,7 +221,7 @@ class AuthController extends Controller
 
             DB::beginTransaction();
             $userUpdateRow = DB::table('tr_account')->where('no', Auth::user()->no)->update([
-                'status' => STATUS_AWAIT,
+                'status' => self::STATUS_AWAIT,
                 'update_date' => date('Y-m-d H:i:s')
             ]);
             if(!$userUpdateRow) {
