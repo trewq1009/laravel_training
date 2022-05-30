@@ -149,6 +149,7 @@ class CurlController extends Controller
 //            // 마일리지 작업?
 //
 //
+//
 //        } catch (Exception $e) {
 //            return json_encode(['status' => 'fail', 'message' => $e->getMessage()]);
 //        }
