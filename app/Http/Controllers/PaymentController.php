@@ -79,7 +79,6 @@ class PaymentController extends Controller
                     'update_date' => date('Y-m-d H:i:s')
                 ]);
                 if(!$failNo) {
-                    DB::rollBack();
                     throw new DatabaseException('통신 및 로그 저장 실패하였습니다.');
                 }
                 DB::commit();
@@ -92,7 +91,14 @@ class PaymentController extends Controller
              * 결재시 응답받을 api 주소도 함께 보낸 후
              * 그곳에서 확인 후 보낸 주소로 cURL 다시 보낸다
              * 유저측 에서 받을 api 를 만들어야 한다
+             *
+             * response = {
+             *      base_url,
+             *      params1,
+             *      params2, ...
+             * }
              */
+
 
 
             $resultData = $response->json();
