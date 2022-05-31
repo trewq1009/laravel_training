@@ -22,7 +22,7 @@ class PaymentController extends Controller
     {
         try {
             $validator =  Validator::make($request->all(),[
-                'price' => ['required','numeric', 'digits_between:4,7'],
+                'price' => ['required','integer', 'digits_between:4,7'],
                 'radioValue' => ['required']
             ]);
 
@@ -36,6 +36,11 @@ class PaymentController extends Controller
         } catch (Exception $e) {
             return redirect()->back()->withErrors($validator)->withInput();
         }
+    }
+
+    public function success(Request $request)
+    {
+        return view('payment.success', ['data' => $request->all()]);
     }
 
 

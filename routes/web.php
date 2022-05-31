@@ -38,6 +38,7 @@ Route::controller(\App\Http\Controllers\PaymentController::class)->group(functio
         Route::get('/payment/step1', function() {return view('payment.step1'); })->name('payment');
         Route::get('/payment/step2', 'method');
         Route::post('/payment/send', 'send');
+        Route::get('/payment/success', 'success');
     });
 });
 
