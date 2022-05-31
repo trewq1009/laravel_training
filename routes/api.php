@@ -18,3 +18,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 Route::post('/pg', [\App\Http\Controllers\CurlController::class, 'index']);
+Route::post('/pg/credit', [\App\Http\Controllers\ImportController::class, 'credit']);

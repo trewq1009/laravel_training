@@ -91,68 +91,69 @@ class CurlController extends Controller
         }
     }
 
-//    public function test(Request $request)
-//    {
-//        try {
-//
-//            $paymentNo = DB::table('tr_payment')->insertGetId([
-//                'user_no' => Auth::user()->no,
-//                'payment_mileage' => $request->only('price')
-//            ]);
-//
-//            // 카드정보 확인
-//            $url = env('APP_URL').'/api/pg';
-//            $data = $request->all();
-//            $data['paymentNo'] = $paymentNo;
-//
-//            $response = Http::withHeaders([
-//                'Accept' => '*/*',
-//                'Content-Type' => 'application/json',
-//                'Access-Control-Allow-Origin' => '*',
-//            ])->post($url, $data);
-//
-//            // 통신 확인
-//            if(!$response->successful()) {
-//                // 실패
-//                throw new Exception('카드 정보 확인 오류');
-//            }
-//
-//            // 결과 확인
-//            $resultData = $response->json();
-//            if($resultData['status'] !== 'success') {
-//                throw new Exception($resultData['message']);
-//            }
-//
-//            // 결제 요청... 및 추가 로직
-//            $payResponse = Http::withHeaders([
-//                'Accept' => '*/*',
-//                'Content-Type' => 'application/json',
-//                'Access-Control-Allow-Origin' => '*',
-//            ])->post($paymentUrl, $resultData['data']);
-//
-//            // 요청 실패
-//            if(!$payResponse->successful()) {
-//                throw new Exception('결제 요청 실패');
-//            }
-//
-//            // 결제 요청 상태값 확인
-//            $paymentData = $payResponse->json();
-//            if($paymentData['status' !== 'success']) {
-//                throw new Exception($paymentData['message']);
-//            }
-//
-//            // 금액 재 확인
-//            if($data['price'] !== $resultData['data']['price'] || $data['price'] !== $paymentData['data']['price']) {
-//                throw new Exception('데이터가 변조되었습니다');
-//            }
-//
-//            // 마일리지 작업?
-//
-//
-//
-//        } catch (Exception $e) {
-//            return json_encode(['status' => 'fail', 'message' => $e->getMessage()]);
-//        }
-//    }
+    public function test(Request $request)
+    {
+        try {
+
+            $paymentNo = DB::table('tr_payment')->insertGetId([
+                'user_no' => Auth::user()->no,
+                'payment_mileage' => $request->only('price')
+            ]);
+
+            // 카드정보 확인
+            $url = env('APP_URL').'/api/pg';
+            $data = $request->all();
+            $data['paymentNo'] = $paymentNo;
+
+            $response = Http::withHeaders([
+                'Accept' => '*/*',
+                'Content-Type' => 'application/json',
+                'Access-Control-Allow-Origin' => '*',
+            ])->post($url, $data);
+
+            // 통신 확인
+            if(!$response->successful()) {
+                // 실패
+                throw new Exception('카드 정보 확인 오류');
+            }
+
+            // 결과 확인
+            $resultData = $response->json();
+            if($resultData['status'] !== 'success') {
+                throw new Exception($resultData['message']);
+            }
+
+            // 결제 요청... 및 추가 로직
+            $paymentUrl = env('APP_URL').'/api/pg/payment';
+            $payResponse = Http::withHeaders([
+                'Accept' => '*/*',
+                'Content-Type' => 'application/json',
+                'Access-Control-Allow-Origin' => '*',
+            ])->post($paymentUrl, $resultData['data']);
+
+            // 요청 실패
+            if(!$payResponse->successful()) {
+                throw new Exception('결제 요청 실패');
+            }
+
+            // 결제 요청 상태값 확인
+            $paymentData = $payResponse->json();
+            if($paymentData['status' !== 'success']) {
+                throw new Exception($paymentData['message']);
+            }
+
+            // 금액 재 확인
+            if($data['price'] !== $resultData['data']['price'] || $data['price'] !== $paymentData['data']['price']) {
+                throw new Exception('데이터가 변조되었습니다');
+            }
+
+            // 마일리지 작업?
+
+
+
+        } catch (Exception $e) {
+            return json_encode(['status' => 'fail', 'message' => $e->getMessage()]);
+        }
+    }
 
 }
