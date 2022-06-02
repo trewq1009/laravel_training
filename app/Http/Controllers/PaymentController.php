@@ -40,6 +40,27 @@ class PaymentController extends Controller
 
     public function success(Request $request)
     {
+        /*
+         * 1. payment 검증
+         *      금액이 변동 되었는지 확인 필요
+         * 2. cURL 이용하여 거래 확정
+         * 3. 결과 DB 반영
+         * 4. view 에 데이터 전달
+         */
+        $data = $request->all();
+        $paymentModel = DB::table('tr_payment')->where('no', $data['paymentNo'])->lockForUpdate()->first();
+
+        if($paymentModel->payment_mileage !== $data['price']) {
+            // 가격 변동됨
+            // 결제 취소 cURL 보내고
+            // DB 취소 업데이트
+        }
+
+        // cURL 결제 확정 보내기
+        // 응답 객체 확인
+        // DB update
+        // view 로 데이터 보내기
+
         return view('payment.success', ['data' => $request->all()]);
     }
 
